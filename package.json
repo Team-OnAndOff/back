@@ -2,9 +2,13 @@
   "scripts": {
     "prestart": "npm install",
     "start": "ts-node index.ts",
+    "dev": "ts-node-dev index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@types/cookie-parser": "^1.4.6",
+    "@types/morgan": "^1.9.9",
+    "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
     "dotenv": "^16.3.1",
@@ -13,13 +17,18 @@
     "eslint-plugin-prettier": "^5.0.1",
     "express": "^4.18.2",
     "http-status": "^1.7.3",
+    "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
     "pm2": "^5.3.0",
     "prettier": "^3.1.1",
+    "reflect-metadata": "^0.1.14",
     "ts-node": "^10.9.2",
     "typeorm": "^0.3.17",
-    "winston": "^3.11.0"
+    "winston": "^3.11.0",
+    "zod": "^3.22.4",
+    "zod-express-middleware": "^1.4.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
@@ -27,6 +36,7 @@
     "@types/node": "^20.10.4",
     "@typescript-eslint/eslint-plugin": "^6.14.0",
     "@typescript-eslint/parser": "^6.14.0",
+    "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }
 }
