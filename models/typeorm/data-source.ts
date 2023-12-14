@@ -4,7 +4,6 @@ import { DataSource } from 'typeorm'
 import dotenv from 'dotenv'
 
 dotenv.config()
-// import { User } from "./entity/User"
 
 export const AppDataSource = new DataSource({
   type: 'mysql',
@@ -15,7 +14,7 @@ export const AppDataSource = new DataSource({
   database: process.env.RDS_DB_NAME,
   synchronize: true,
   logging: false,
-  entities: [],
+  entities: ['models/typeorm/entity/*.ts'],
   migrations: [],
   subscribers: [],
 })
