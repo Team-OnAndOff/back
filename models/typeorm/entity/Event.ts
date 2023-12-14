@@ -45,14 +45,6 @@ export class Event extends BaseAutoIdEntity {
   @JoinColumn()
   image!: Image
 
-  @ManyToOne(() => CareerCategory, (category) => category.id, {
-    nullable: true,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  @JoinColumn({ name: 'careerCategoryId' })
-  careerCategoryId!: CareerCategory
-
   @OneToOne(() => EventAddress, {
     nullable: true,
     onDelete: 'CASCADE',

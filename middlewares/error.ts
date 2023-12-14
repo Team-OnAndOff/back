@@ -1,6 +1,6 @@
 import { ErrorRequestHandler, NextFunction, Request, Response } from 'express'
 import mongoose from 'mongoose'
-import typeorm, { MongoAPIError } from 'typeorm'
+import { MongoAPIError, TypeORMError } from 'typeorm'
 
 // const config = require('../config/config')
 
@@ -25,7 +25,7 @@ export const errorConverter = (
     const statusCode =
       error.statusCode ||
       error instanceof mongoose.Error ||
-      error instanceof typeorm.TypeORMError
+      error instanceof TypeORMError
         ? httpStatus.BAD_REQUEST
         : httpStatus.INTERNAL_SERVER_ERROR
     const message = error.message || httpStatus[statusCode]
