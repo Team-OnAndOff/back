@@ -1,0 +1,165 @@
+openapi: 3.0.3
+info:
+  title: Elice SW Track 7th Web Project Team 5 - 온앤오프
+  description: API 문서
+  version: 1.0.0
+servers:
+  - url: http://localhost:4000/api
+tags:
+  - name: careerCategories
+    description: 직업 카테고리 API
+
+paths:
+  /careerCategories:
+    get:
+      tags:
+        - careerCategories
+      summary: 직업 카테고리 목록
+      description: 직업 카테고리 목록을 가져오는 API
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CareerCategory'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    post:
+      tags:
+        - careerCategories
+      summary: 직업 카테고리 등록
+      description: 직업 카테고리를 등록하는 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 학생
+        required: true
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /careerCategories/{id}:
+    get:
+      tags:
+        - careerCategories
+      summary: 직업 카테고리 상세
+      description: 직업 카테고리 상세정보을 가져오는 API
+      parameters:
+        - name: id
+          in: path
+          description: 직업 카테고리 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CareerCategory'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    put:
+      tags:
+        - careerCategories
+      summary: 직업 카테고리 수정
+      description: 직업 카테고리 정보를 수정하는 API
+      parameters:
+        - name: id
+          in: path
+          description: 직업 카테고리 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 학생
+        required: true
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - careerCategories
+      summary: 직업 카테고리 삭제
+      description: 직업 카테고리 정보를 삭제하는 API
+      parameters:
+        - name: id
+          in: path
+          description: 직업 카테고리 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+components:
+  schemas:
+    CareerCategory:
+      required:
+        - _id
+        - name
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        _id:
+          type: number
+          example: 1
+          description: Primary Key
+        name:
+          type: string
+          example: 학생
+          description: 직업 카테고리 이름
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer

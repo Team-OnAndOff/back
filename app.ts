@@ -1,5 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express'
 import cookieParser from 'cookie-parser'
+import swaggerUi from 'swagger-ui-express'
+import YAML from 'yamljs'
+import path from 'path'
 
 import { apiRouter } from './routes/index'
 
@@ -18,6 +21,9 @@ import { ApiError } from './utils/error'
 import cors from 'cors'
 
 export const app = express()
+const swaggerSpec = YAML.load(path.join(__dirname, './swagger.yaml'))
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
 logger.info('hello0')
 // app.use(express.static(__dirname + "/front/dist"));
