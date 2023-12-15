@@ -13,5 +13,5 @@ export class SubCategory extends BaseAutoIdEntity {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'parentId' })
-  parentCategories!: Category
+  parentId?: Category
 }
