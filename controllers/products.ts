@@ -13,5 +13,6 @@ export const getProduct = catchAsync(async (req, res, next) => {
     throw new ApiError(httpStatus.NOT_FOUND, '상품을 찾지 못하였습니다.')
   }
   logger.info(`[pid=${product_id}] : ${product}`)
+  console.log(req.user)
   res.status(httpStatus.OK).json(product)
 })
