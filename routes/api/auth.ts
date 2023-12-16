@@ -20,6 +20,7 @@ export enum OAuthEnum {
   KAKAO = 'kakao',
   FACEBOOK = 'facebook',
   NAVER = 'naver',
+  GITHUB = 'github',
 }
 
 const socialValidator = {
@@ -48,6 +49,10 @@ router.get(
       nextMiddleware = passport.authenticate(socialName, {
         scope: ['profile'],
         prompt: 'select_account',
+      })
+    } else if (socialName === OAuthEnum.GITHUB) {
+      nextMiddleware = passport.authenticate(socialName, {
+        prompt: 'login',
       })
     } else {
       nextMiddleware = passport.authenticate(socialName)

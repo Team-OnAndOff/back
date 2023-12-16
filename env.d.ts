@@ -15,5 +15,9 @@ declare namespace NodeJS {
     NAVER_CLIENT_ID: string
     NAVER_CLIENT_SECRET: string
     NAVER_CALLBACK_PATH: string
+
+    GITHUB_CLIENT_ID: string
+    GITHUB_CLIENT_SECRET: string
+    GITHUB_CALLBACK_PATH: string
   }
 }
