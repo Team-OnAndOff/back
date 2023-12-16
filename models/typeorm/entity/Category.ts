@@ -10,7 +10,7 @@ export class Category extends BaseAutoIdEntity {
   @Column({ type: 'tinyint' })
   flag!: number
 
-  @OneToMany(() => SubCategory, (category) => category.parentCategories, {
+  @OneToMany(() => SubCategory, (category) => category.parentId, {
     nullable: true,
   })
   subCategories!: SubCategory[]

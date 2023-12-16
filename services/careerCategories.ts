@@ -5,7 +5,6 @@ import {
   CareerCategoryBodyDTO,
   CareerCategoryParamsDTO,
 } from '../models/typeorm/dto/CareerCategoryDTO'
-import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 import { ApiError } from '../utils/error'
 
 class CareerCategoryService {
@@ -17,16 +16,13 @@ class CareerCategoryService {
 
   async getCareerCategories() {
     const careerCategories = await this.repo.find()
-    return new ResponseDTO<CareerCategory[]>(
-      httpStatus.OK,
-      'success',
-      careerCategories,
-    )
+    return careerCategories
   }
 
-  async getCareerCategoryById(paramsDto: CareerCategoryParamsDTO) {
-    const { id } = paramsDto
-    const careerCategory = await this.repo.findOneById(id)
+  async getCareerCategoryById(params: CareerCategoryParamsDTO) {
+    const { id } = params
+    const careerCategory = await this.repo.findOne({ where: { id } })
+
     if (!careerCategory) {
       throw new ApiError(
         httpStatus.NOT_FOUND,
@@ -34,28 +30,20 @@ class CareerCategoryService {
       )
     }
 
-    return new ResponseDTO<CareerCategory>(
-      httpStatus.OK,
-      'success',
-      careerCategory,
-    )
+    return careerCategory
   }
 
-  async createCareerCategory(bodyDto: CareerCategoryBodyDTO) {
-    const careerCategory = await this.repo.save(bodyDto)
-    return new ResponseDTO<CareerCategory>(
-      httpStatus.OK,
-      'success',
-      careerCategory,
-    )
+  async createCareerCategory(body: CareerCategoryBodyDTO) {
+    const careerCategory = await this.repo.save(body)
+    return careerCategory
   }
 
   async updateCareerCategory(
-    paramsDto: CareerCategoryParamsDTO,
-    bodyDto: CareerCategoryBodyDTO,
+    params: CareerCategoryParamsDTO,
+    body: CareerCategoryBodyDTO,
   ) {
-    const { id } = paramsDto
-    const response = await this.repo.update({ id }, bodyDto)
+    const { id } = params
+    const response = await this.repo.update({ id }, body)
 
     if (response.affected === 0) {
       throw new ApiError(
@@ -64,13 +52,13 @@ class CareerCategoryService {
       )
     }
 
-    return await this.getCareerCategoryById(paramsDto)
+    return await this.getCareerCategoryById(params)
   }
 
-  async deleteCareerCategory(paramsDto: CareerCategoryParamsDTO) {
-    const { id } = paramsDto
-
+  async deleteCareerCategory(params: CareerCategoryParamsDTO) {
+    const { id } = params
     const response = await this.repo.delete(id)
+
     if (response.affected === 0) {
       throw new ApiError(
         httpStatus.NOT_FOUND,
@@ -78,7 +66,7 @@ class CareerCategoryService {
       )
     }
 
-    return new ResponseDTO<CareerCategory>(httpStatus.OK, 'success')
+    return response
   }
 }
 
