@@ -4,9 +4,11 @@ const router = Router()
 
 import productsRouter from './api/prodocts'
 import careerCategoryRouter from './api/careerCategories'
+import authRouter from './api/auth'
 
 logger.info('API 라우터 올라옴')
 
 export const apiRouter = router
   .use('/products', productsRouter)
   .use('/careerCategories', careerCategoryRouter)
+  .use('/auth', authRouter)

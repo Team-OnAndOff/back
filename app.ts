@@ -1,8 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express'
 import cookieParser from 'cookie-parser'
+import session from 'express-session'
+import createMemoryStore from 'memorystore'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import path from 'path'
+import { passport, setOauthStrategies } from './config/passport'
 
 import { apiRouter } from './routes/index'
 
@@ -36,8 +39,27 @@ app.use(morgan.successHandler)
 app.use(morgan.errorHandler)
 
 app.use(express.json())
-// app.use(cors({ origin: 'http://localhost:5002' }))
+app.use(cors())
 app.use(cookieParser())
+
+const MemoryStore = createMemoryStore(session)
+const checkPeriod = 24 * 60 * 60 * 1000
+const memoryStore = new MemoryStore({ checkPeriod })
+app.use(
+  session({
+    secret: '!@E@E$#T4twerwf@#%ew^&rrrr',
+    store: memoryStore,
+    resave: true,
+    saveUninitialized: false,
+    cookie: { maxAge: checkPeriod },
+  }),
+)
+
+app.use(passport.initialize())
+app.use(passport.session())
+
+setOauthStrategies(app)
+
 app.use('/api', apiRouter)
 
 app.use((req: Request, res: Response, next: NextFunction) => {

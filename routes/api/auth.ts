@@ -1,0 +1,72 @@
+import { Router } from 'express'
+// import validate from '../../middlewares/validate'
+import AuthController from '../../controllers/auth'
+import { validateRequest } from 'zod-express-middleware'
+import { z } from 'zod'
+import { ApiError } from '../../utils/error'
+import HttpStatus from 'http-status'
+import { passport } from '../../config/passport'
+import { logger } from '../../config/logger'
+const router = Router()
+
+// passport-google-oauth2
+// passport-kakao
+// passport-facebook
+// passport-naver
+// export const oauthList = ['google', 'kakao', 'facebook', 'naver'] as const
+
+export enum OAuthEnum {
+  GOOGLE = 'google',
+  KAKAO = 'kakao',
+  FACEBOOK = 'facebook',
+  NAVER = 'naver',
+}
+
+const socialValidator = {
+  params: z
+    .object({
+      social: z.nativeEnum(OAuthEnum),
+    })
+    .strict(),
+}
+const socialCallbackValidator = {
+  params: z
+    .object({
+      social: z.nativeEnum(OAuthEnum),
+    })
+    .strict(),
+  query: z.object({ code: z.string() }),
+}
+router.get(
+  '/login/:social',
+  validateRequest(socialValidator),
+  (req, res, next) => {
+    logger.info('social Login!', req.user)
+    const socialName = req.params.social
+    let nextMiddleware = null
+    if (socialName === OAuthEnum.GOOGLE) {
+      nextMiddleware = passport.authenticate(socialName, {
+        scope: ['profile'],
+        prompt: 'select_account',
+      })
+    } else {
+      nextMiddleware = passport.authenticate(socialName)
+    }
+    nextMiddleware(req, res, next)
+  },
+)
+router.get(
+  '/login/:social/callback',
+  validateRequest(socialCallbackValidator),
+  (req, res, next) => {
+    console.log(req.user)
+    logger.info('callback으로 돌아옴!')
+    passport.authenticate(req.params.social)(req, res, next)
+  },
+  AuthController.getLoginCallback,
+)
+
+router.get('/logout', AuthController.getLogout)
+router.get('/withdraw', AuthController.getWithdraw)
+
+export default router
