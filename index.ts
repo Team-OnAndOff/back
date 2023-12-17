@@ -28,7 +28,7 @@ Promise.all(promises)
     })
   })
   .catch((e) => {
-    logger.error('MongoDB Connection Failed')
+    logger.error('MongoDB or MySQL Connection Failed')
     logger.error(e)
   })
 

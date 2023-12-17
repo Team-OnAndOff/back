@@ -71,7 +71,8 @@ export const setOauthStrategies = (_app: Express) => {
       {
         clientID: process.env.GITHUB_CLIENT_ID!,
         clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-        callbackURL: `${app_location}/${process.env.GITHUB_CALLBACK_PATH!}`,
+        callbackURL: `${app_location}/${process.env
+          .GITHUB_CALLBACK_PATH!}?prompt=login`,
       },
       async function (
         accessToken: any,
