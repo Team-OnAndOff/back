@@ -93,6 +93,6 @@ export class Event extends BaseAutoIdEntity {
   })
   careerCategories!: CareerCategory[]
 
-  @OneToMany(() => EventLike, (like) => like.eventId, { nullable: true })
+  @OneToMany(() => EventLike, (like) => like.event, { nullable: true })
   likes?: EventLike[]
 }

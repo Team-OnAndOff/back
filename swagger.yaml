@@ -92,7 +92,7 @@ paths:
                   type: array
                   items:
                     type: string
-                  example: ["JS", "TS", "React"]
+                  example: ['JS', 'TS', 'React']
                   description: 해시태그 문자열 배열
                 image:
                   type: file
@@ -224,6 +224,38 @@ paths:
           required: true
           schema:
             type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/likes:
+    put:
+      tags:
+        - events
+      summary: 모임 좋아요
+      description: 모임 좋아요 정보를 수정/등록하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: number
+                  example: 1
+                  description: 유저 Id
+        required: true
       responses:
         '200':
           description: 성공
@@ -634,7 +666,7 @@ paths:
           description: 잘못된 요청
         '5xx':
           description: 서버 에러
-  
+
   /categories/{categoryId}/subCategories/{subCategoryId}:
     get:
       tags:
@@ -727,7 +759,6 @@ paths:
           description: 잘못된 요청
         '5xx':
           description: 서버 에러
-
 
 components:
   schemas:
@@ -858,35 +889,6 @@ components:
 
     CareerCategory:
       required:
-        - _id
-        - name
-        - createdAt
-        - updatedAt
-      type: object
-      properties:
-        _id:
-          type: number
-          example: 1
-          description: Primary Key
-        name:
-          type: string
-          example: 학생
-          description: 직업 카테고리 이름
-        createdAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 등록날짜
-        updatedAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 수정날짜
-        deletedAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 삭제날짜
-
-    CareerCategory:
-      required:
         - id
         - name
         - createdAt
@@ -913,7 +915,6 @@ components:
           type: string
           example: 2023-12-01T17:32:28Z
           description: 삭제날짜
-
 
     Category:
       required:
@@ -986,4 +987,3 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-
