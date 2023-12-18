@@ -1,13 +1,17 @@
 import { Router } from 'express'
 import validate from '../../middlewares/validate'
 import EventController from '../../controllers/events'
-import { EventBodyDTO, EventParamsDTO } from '../../models/typeorm/dto/EventDTO'
+import {
+  EventBodyDTO,
+  EventParamsDTO,
+  EventQueryDTO,
+} from '../../models/typeorm/dto/EventDTO'
 import { ImageDTO } from '../../models/typeorm/dto/ImageDTO'
 import { upload } from '../../utils/upload'
 
 const router = Router()
 
-router.get('/', EventController.getEvents)
+router.get('/', validate(EventQueryDTO, 'query'), EventController.getEvents)
 
 router.get('/:id', validate(EventParamsDTO, 'params'), EventController.getEvent)
 

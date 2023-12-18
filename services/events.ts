@@ -1,7 +1,7 @@
 import httpStatus from 'http-status'
 import { AppDataSource } from '../models/typeorm/data-source'
 import { Event } from '../models/typeorm/entity/Event'
-import { EventBodyDTO } from '../models/typeorm/dto/EventDTO'
+import { EventBodyDTO, EventQueryDTO } from '../models/typeorm/dto/EventDTO'
 import { ApiError } from '../utils/error'
 import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
 import { s3Delete, s3Upload } from '../utils/s3'
@@ -20,29 +20,41 @@ class EventService {
     this.eventRepo = AppDataSource.getRepository(Event)
   }
 
-  async getEvents() {
-    const events = await this.eventRepo
+  getQueryBuilder = () => {
+    return this.eventRepo
       .createQueryBuilder('event')
       .innerJoinAndSelect('event.user', 'user')
+      .leftJoinAndSelect('user.image', 'userImage')
       .innerJoinAndSelect('event.category', 'subCategory')
       .innerJoinAndSelect('subCategory.parentId', 'category')
       .leftJoinAndSelect('event.image', 'image')
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
-      .getMany()
+  }
+
+  async getEvents(query: EventQueryDTO) {
+    const { categoryId, subCategoryId } = query
+    const queryBuilder = this.getQueryBuilder()
+
+    if (categoryId) {
+      queryBuilder.where('category.id = :categoryId', {
+        categoryId: categoryId,
+      })
+    }
+
+    if (subCategoryId) {
+      queryBuilder.andWhere('subCategory.id = :subCategoryId', {
+        subCategoryId: subCategoryId,
+      })
+    }
+
+    const events = await queryBuilder.getMany()
 
     return events
   }
 
   async getEventById(eventId: number) {
-    const event = await this.eventRepo
-      .createQueryBuilder('event')
-      .innerJoinAndSelect('event.user', 'user')
-      .innerJoinAndSelect('event.category', 'subCategory')
-      .innerJoinAndSelect('subCategory.parentId', 'category')
-      .leftJoinAndSelect('event.image', 'image')
-      .leftJoinAndSelect('event.address', 'address')
-      .leftJoinAndSelect('event.hashTags', 'hashtag')
+    const event = await this.getQueryBuilder()
       .where('event.id = :eventId', { eventId })
       .getOne()
 

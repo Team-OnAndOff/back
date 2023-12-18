@@ -77,7 +77,7 @@ export class User extends BaseAutoIdEntity {
   })
   reportedComplaints?: UserComplaint[]
 
-  @OneToMany(() => EventComplaint, (complaint) => complaint.reporterId, {
+  @OneToMany(() => EventComplaint, (complaint) => complaint.user, {
     nullable: true,
   })
   eventComplaints?: EventComplaint[]

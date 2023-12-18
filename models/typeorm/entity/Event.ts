@@ -74,7 +74,7 @@ export class Event extends BaseAutoIdEntity {
   })
   hashTags!: EventHashTag[]
 
-  @OneToMany(() => EventComplaint, (eventComplaint) => eventComplaint.eventId, {
+  @OneToMany(() => EventComplaint, (eventComplaint) => eventComplaint.event, {
     nullable: true,
   })
   eventComplaints?: EventComplaint[]

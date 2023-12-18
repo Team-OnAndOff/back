@@ -1,4 +1,5 @@
 import { Type } from 'class-transformer'
+import { ParsedQs } from 'qs'
 import {
   IsString,
   IsNotEmpty,
@@ -30,6 +31,11 @@ interface EventRequestBody {
 
 export interface EventRequestParams {
   readonly id: number
+}
+
+export interface EventRequestQuery extends ParsedQs {
+  readonly categoryId: string
+  readonly subCategoryId: string
 }
 
 export class EventBodyDTO {
@@ -122,5 +128,20 @@ export class EventParamsDTO {
 
   constructor(params: EventRequestParams) {
     this.id = params.id
+  }
+}
+
+export class EventQueryDTO {
+  @IsOptional()
+  @IsNumberString()
+  readonly categoryId: string
+
+  @IsOptional()
+  @IsNumberString()
+  readonly subCategoryId: string
+
+  constructor(params: EventRequestQuery) {
+    this.categoryId = params.categoryId
+    this.subCategoryId = params.subCategoryId
   }
 }

@@ -10,16 +10,16 @@ export class EventComplaint extends BaseAutoIdEntity {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'reporterId' })
-  reporterId!: User
+  @JoinColumn()
+  user!: User
 
   @ManyToOne(() => Event, (event) => event.id, {
     nullable: false,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
-  @JoinColumn({ name: 'eventId' })
-  eventId!: Event
+  @JoinColumn()
+  event!: Event
 
   @Column({ type: 'text' })
   description!: string
