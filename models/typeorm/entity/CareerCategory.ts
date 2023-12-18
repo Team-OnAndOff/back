@@ -1,18 +1,15 @@
-import { Entity, Column, OneToMany } from 'typeorm'
+import { Entity, Column, ManyToMany, JoinTable } from 'typeorm'
 import { BaseAutoIdEntity } from './BaseAutoIdEntity'
-import { EventCareerCategory } from './EventCareerCategory'
+import { Event } from './Event'
 
 @Entity({ name: 'CAREER_CATEGORY' })
 export class CareerCategory extends BaseAutoIdEntity {
   @Column({ type: 'varchar', length: 255, unique: true })
   name!: string
 
-  @OneToMany(
-    () => EventCareerCategory,
-    (careerCategory) => careerCategory.careerCategoryId,
-    {
-      nullable: true,
-    },
-  )
-  careerCategories!: EventCareerCategory[]
+  @ManyToMany(() => Event, (event) => event.id)
+  @JoinTable({
+    name: 'EVENT_CAREER_CATEGORY',
+  })
+  events!: Event[]
 }

@@ -42,7 +42,7 @@ export class User extends BaseAutoIdEntity {
   @JoinColumn()
   careerCategory?: CareerCategory
 
-  @OneToMany(() => Event, (event) => event.userId)
+  @OneToMany(() => Event, (event) => event.user)
   events!: Event[]
 
   @OneToMany(() => EventLike, (event) => event.userId, {

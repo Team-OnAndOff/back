@@ -29,7 +29,8 @@ export default class CareerCategoryController {
 
   static getCareerCategory = catchAsync(async (req, res, next) => {
     const params = CareerCategoryController.extractParams(req)
-    const careerCategory = await service.getCareerCategoryById(params)
+    const { id } = params
+    const careerCategory = await service.getCareerCategoryById(id)
     res
       .status(httpStatus.OK)
       .json(createResponse<CareerCategory>(careerCategory))
@@ -46,7 +47,8 @@ export default class CareerCategoryController {
   static updateCareerCategory = catchAsync(async (req, res, next) => {
     const params = CareerCategoryController.extractParams(req)
     const body = CareerCategoryController.extractBody(req)
-    const careerCategory = await service.updateCareerCategory(params, body)
+    const { id } = params
+    const careerCategory = await service.updateCareerCategoryById(id, body)
     res
       .status(httpStatus.OK)
       .json(createResponse<CareerCategory>(careerCategory))
@@ -54,7 +56,8 @@ export default class CareerCategoryController {
 
   static deleteCareerCategory = catchAsync(async (req, res, next) => {
     const params = CareerCategoryController.extractParams(req)
-    await service.deleteCareerCategory(params)
+    const { id } = params
+    await service.deleteCareerCategoryById(id)
     res.status(httpStatus.OK).json(createResponse<CareerCategory>())
   })
 }
