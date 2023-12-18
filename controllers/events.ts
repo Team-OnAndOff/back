@@ -64,4 +64,11 @@ export default class EventController {
     await service.deleteEventById(id)
     res.status(httpStatus.OK).json(createResponse<Event>())
   })
+
+  static updateEventLike = catchAsync(async (req, res, next) => {
+    const { id } = EventController.extractParams(req)
+    const body = EventController.extractBody(req)
+    await service.updateEventLike(id, body)
+    res.status(httpStatus.OK).json(createResponse<Event>())
+  })
 }

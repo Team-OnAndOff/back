@@ -12,12 +12,16 @@ import { Image } from '../models/typeorm/entity/Image'
 import { EventAddress } from '../models/typeorm/entity/EventAddress'
 import { CareerCategory } from '../models/typeorm/entity/CareerCategory'
 import { EventHashTag } from '../models/typeorm/entity/EventHashTag'
+import { EventLikeBodyDTO } from '../models/typeorm/dto/EventLIkeDTO'
+import { EventLike } from '../models/typeorm/entity/EventLike'
 
 class EventService {
   private readonly eventRepo
+  private readonly eventLikeRepo
 
   constructor() {
     this.eventRepo = AppDataSource.getRepository(Event)
+    this.eventLikeRepo = AppDataSource.getRepository(EventLike)
   }
 
   getQueryBuilder = () => {
@@ -30,6 +34,7 @@ class EventService {
       .leftJoinAndSelect('event.image', 'image')
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .loadRelationCountAndMap('event.likes', 'event.likes')
   }
 
   async getEvents(query: EventQueryDTO) {
@@ -190,6 +195,47 @@ class EventService {
 
     if (response.affected === 0) {
       throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
+    }
+
+    return response
+  }
+
+  async updateEventLike(eventId: number, body: EventLikeBodyDTO) {
+    const event = await this.getEventById(eventId)
+    const user = await UserService.findOneById(body.userId)
+
+    if (!user) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '유저가 존재하지 않음',
+      )
+    }
+
+    const existingEventLike = await this.eventLikeRepo
+      .createQueryBuilder('like')
+      .where('like.event = :eventId', { eventId })
+      .andWhere('like.user = :userId', { userId: body.userId })
+      .getOne()
+
+    let response
+    if (existingEventLike) {
+      response = await this.eventLikeRepo
+        .createQueryBuilder()
+        .delete()
+        .from(EventLike)
+        .where('id = :id', { id: existingEventLike.id })
+        .execute()
+    } else {
+      response = await this.eventLikeRepo
+        .createQueryBuilder()
+        .insert()
+        .into(EventLike)
+        .values({
+          user,
+          event,
+          liked: new Date(),
+        })
+        .execute()
     }
 
     return response

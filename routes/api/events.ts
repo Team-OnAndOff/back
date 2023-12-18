@@ -8,6 +8,7 @@ import {
 } from '../../models/typeorm/dto/EventDTO'
 import { ImageDTO } from '../../models/typeorm/dto/ImageDTO'
 import { upload } from '../../utils/upload'
+import { EventLikeBodyDTO } from '../../models/typeorm/dto/EventLIkeDTO'
 
 const router = Router()
 
@@ -36,4 +37,10 @@ router.delete(
   EventController.deleteEvent,
 )
 
+router.put(
+  '/:id/likes',
+  validate(EventParamsDTO, 'params'),
+  validate(EventLikeBodyDTO),
+  EventController.updateEventLike,
+)
 export default router

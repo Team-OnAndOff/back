@@ -45,7 +45,7 @@ export class User extends BaseAutoIdEntity {
   @OneToMany(() => Event, (event) => event.user)
   events!: Event[]
 
-  @OneToMany(() => EventLike, (event) => event.userId, {
+  @OneToMany(() => EventLike, (event) => event.user, {
     nullable: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
