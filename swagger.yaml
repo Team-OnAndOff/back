@@ -6,12 +6,225 @@ info:
 servers:
   - url: http://localhost:4000/api
 tags:
+  - name: events
+    description: 모임 API
   - name: careerCategories
     description: 직업 카테고리 API
   - name: categories
     description: 카테고리 API
 
 paths:
+  /events:
+    get:
+      tags:
+        - events
+      summary: 모임 목록
+      description: 모임 목록을 가져오는 API
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+    post:
+      tags:
+        - events
+      summary: 모임 등록
+      description: 모임를 등록하는 API
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - userId
+                - image
+                - categoryId
+                - subCategoryId
+                - title
+                - content
+                - recruitment
+                - online
+                - question
+                - challengeStartDate
+              properties:
+                userId:
+                  type: number
+                  example: 1
+                  description: 유저ID
+                categoryId:
+                  type: number
+                  example: 1
+                  description: 카테고리ID
+                subCategoryId:
+                  type: number
+                  example: 1
+                  description: 서브 카테고리ID
+                careerCategoryId:
+                  type: array
+                  items:
+                    type: number
+                  example: [1, 2, 3]
+                  description: 직업카테고리 ID 배열
+                hashTag:
+                  type: array
+                  items:
+                    type: string
+                  example: ["JS", "TS", "React"]
+                  description: 해시태그 문자열 배열
+                image:
+                  type: file
+                  example: https://example.com/image/image.png
+                  description: 대표 이미지
+                title:
+                  type: string
+                  example: TS + React스터디 모집
+                  description: 모임 제목
+                content:
+                  type: string
+                  example: TS + React스터디 공부 같이 하실분~~
+                  description: 모임 내용
+                recruitment:
+                  type: number
+                  example: 20
+                  description: 모임 정원
+                question:
+                  type: string
+                  example: 간단한 자기소개해주세요.
+                  description: 모임에 대한 질문 내용
+                online:
+                  type: number
+                  example: 1
+                  description: 1 온라인, 0 오프라인
+                challengeStartDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 시작 날짜
+                challengeEndDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 종료 날짜
+                address:
+                  type: object
+                  properties:
+                    zipCode:
+                      type: number
+                      example: 11523
+                      description: 주소(우편번호)
+                    detail1:
+                      type: string
+                      example: 서울특별시 성동구 아차산로17길 48
+                      description: 주소(도로명)
+                    detail2:
+                      type: string
+                      example: 203호
+                      description: 주소(상세)
+                    latitude:
+                      type: number
+                      example: 11523
+                      description: 위도
+                    longitude:
+                      type: number
+                      example: 11523
+                      description: 경도
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}:
+    get:
+      tags:
+        - events
+      summary: 모임 상세
+      description: 모임 상세정보을 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    put:
+      tags:
+        - events
+      summary: 모임 수정
+      description: 모임 정보를 수정하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 학생
+        required: true
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - events
+      summary: 모임 삭제
+      description: 모임 정보를 삭제하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+
+
+
+
+
+
+
+
   /careerCategories:
     get:
       tags:
@@ -401,24 +614,101 @@ paths:
           description: 서버 에러
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 components:
   schemas:
+    Event:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        image:
+          $ref: '#/components/schemas/Image'
+        category:
+          $ref: '#/components/schemas/SubCategory'
+        careerCategory:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareerCategory'
+        title:
+          type: string
+          example: TS + React스터디 모집
+          description: 모임 제목
+        content:
+          type: string
+          example: TS + React스터디 공부 같이 하실분~~
+          description: 모임 내용
+        recruitment:
+          type: number
+          example: 20
+          description: 모임 정원
+        question:
+          type: string
+          example: 간단한 자기소개해주세요.
+          description: 모임에 대한 질문 내용
+        online:
+          type: number
+          example: 1
+          description: 0 오프라인, 1 온라인
+        challengeStartDate:
+          type: string
+          example: 2023-12-01
+          description: 모임 시작 날짜
+        challengeEndDate:
+          type: string
+          example: 2023-12-01
+          description: 모임 종료 날짜
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
+    Image:
+      required:
+        - id
+        - uploadPath
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        fileName:
+          type: string
+          example: 파일이름.png
+          description: 업로드된 파일이름
+        uploadPath:
+          type: string
+          example: https://www.s3.example/...
+          description: 파일이 저장된 경로
+        size:
+          type: number
+          example: 5827365
+          description: 파일크기
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
     CareerCategory:
       required:
         - _id
@@ -448,16 +738,15 @@ components:
           example: 2023-12-01T17:32:28Z
           description: 삭제날짜
 
-
     CareerCategory:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key
@@ -481,13 +770,13 @@ components:
 
     Category:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key
@@ -519,13 +808,13 @@ components:
 
     SubCategory:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key
@@ -550,3 +839,4 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
+

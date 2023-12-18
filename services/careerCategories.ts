@@ -1,10 +1,7 @@
 import httpStatus from 'http-status'
 import { AppDataSource } from '../models/typeorm/data-source'
 import { CareerCategory } from '../models/typeorm/entity/CareerCategory'
-import {
-  CareerCategoryBodyDTO,
-  CareerCategoryParamsDTO,
-} from '../models/typeorm/dto/CareerCategoryDTO'
+import { CareerCategoryBodyDTO } from '../models/typeorm/dto/CareerCategoryDTO'
 import { ApiError } from '../utils/error'
 
 class CareerCategoryService {
@@ -19,8 +16,7 @@ class CareerCategoryService {
     return careerCategories
   }
 
-  async getCareerCategoryById(params: CareerCategoryParamsDTO) {
-    const { id } = params
+  async getCareerCategoryById(id: number) {
     const careerCategory = await this.repo.findOne({ where: { id } })
 
     if (!careerCategory) {
@@ -38,11 +34,7 @@ class CareerCategoryService {
     return careerCategory
   }
 
-  async updateCareerCategory(
-    params: CareerCategoryParamsDTO,
-    body: CareerCategoryBodyDTO,
-  ) {
-    const { id } = params
+  async updateCareerCategoryById(id: number, body: CareerCategoryBodyDTO) {
     const response = await this.repo.update({ id }, body)
 
     if (response.affected === 0) {
@@ -52,11 +44,10 @@ class CareerCategoryService {
       )
     }
 
-    return await this.getCareerCategoryById(params)
+    return await this.getCareerCategoryById(id)
   }
 
-  async deleteCareerCategory(params: CareerCategoryParamsDTO) {
-    const { id } = params
+  async deleteCareerCategoryById(id: number) {
     const response = await this.repo.delete(id)
 
     if (response.affected === 0) {
