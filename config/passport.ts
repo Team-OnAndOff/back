@@ -1,9 +1,10 @@
-import _passport from 'passport'
+import _passport, { Profile } from 'passport'
 import { Express, NextFunction } from 'express'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import { Strategy as KakaoStrategy } from 'passport-kakao'
 import { Strategy as FacebookStrategy } from 'passport-facebook'
 import { Strategy as NaverStrategy } from 'passport-naver'
+import { Strategy as GitHubStrategy } from 'passport-github2'
 import { ApiError } from '../utils/error'
 import httpStatus from 'http-status'
 import dotenv from 'dotenv'
@@ -20,28 +21,33 @@ export const isLogin = (req: any, res: Response, next: NextFunction) => {
   if (!req.user) {
     throw new ApiError(httpStatus.Unauthorized, '로그인 필요')
     // Unauthorized or Unauthenticated
-  } else {
-    next()
   }
+  next()
 }
+
+const bringUser = async (profile: Profile, oauthType: OAuthEnum) => {
+  logger.info(oauthType, '로그인 시도!')
+  let user = await UserService.findOneBySocialId(profile.id)
+  if (!user) {
+    user = await UserService.createUser(
+      new createUserDTO(profile.id, OAuthEnum.KAKAO),
+    )
+  }
+  logger.info(user)
+  return user
+}
+
 export const setOauthStrategies = (_app: Express) => {
-  const app_location = `${process.env.APP_LOCATION}:${process.env.APP_PORT}/`
+  const app_location = `${process.env.APP_LOCATION}:${process.env.APP_PORT}`
   passport.use(
     new KakaoStrategy(
       {
         clientID: process.env.KAKAO_CLIENT_ID!,
         // clientSecret: process.env.KAKAO_CLIENT_SECRET!,
-        callbackURL: `${app_location}${process.env.KAKAO_CALLBACK_PATH!}`,
+        callbackURL: `${app_location}/${process.env.KAKAO_CALLBACK_PATH!}`,
       },
       async function (accessToken, refreshToken, profile, cb) {
-        logger.info('로그인 시도!')
-        let user = await UserService.findOneBySocialId(profile.id)
-        if (!user) {
-          user = await UserService.createUser(
-            new createUserDTO(profile.id, OAuthEnum.KAKAO),
-          )
-        }
-        logger.info(user)
+        const user = await bringUser(profile, OAuthEnum.KAKAO)
         cb(null, user)
       },
     ),
@@ -51,22 +57,30 @@ export const setOauthStrategies = (_app: Express) => {
       {
         clientID: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        callbackURL: `${app_location}${process.env.GOOGLE_CALLBACK_PATH!}`,
+        callbackURL: `${app_location}/${process.env.GOOGLE_CALLBACK_PATH!}`,
+      },
+      async function (accessToken, refreshToken, profile, cb) {
+        const user = await bringUser(profile, OAuthEnum.GOOGLE)
+        cb(null, user)
+      },
+    ),
+  )
+
+  passport.use(
+    new GitHubStrategy(
+      {
+        clientID: process.env.GITHUB_CLIENT_ID!,
+        clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+        callbackURL: `${app_location}/${process.env
+          .GITHUB_CALLBACK_PATH!}?prompt=login`,
       },
       async function (
         accessToken: any,
         refreshToken: any,
-        profile: any,
+        profile: Profile,
         cb: any,
       ) {
-        logger.info('로그인 시도!')
-        let user = await UserService.findOneBySocialId(profile.id)
-        if (!user) {
-          user = await UserService.createUser(
-            new createUserDTO(profile.id, OAuthEnum.GOOGLE),
-          )
-        }
-        logger.info(user)
+        const user = await bringUser(profile, OAuthEnum.GITHUB)
         cb(null, user)
       },
     ),

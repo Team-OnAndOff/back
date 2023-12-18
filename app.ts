@@ -28,7 +28,6 @@ const swaggerSpec = YAML.load(path.join(__dirname, './swagger.yaml'))
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 
-logger.info('hello0')
 // app.use(express.static(__dirname + "/front/dist"));
 // app.set('view engine', 'ejs')
 // app.set('views', path.join(__dirname, 'views'))
