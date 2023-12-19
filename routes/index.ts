@@ -7,6 +7,7 @@ import reportsEventRouter from './api/reportEvents'
 import categoryRouter from './api/categories'
 import careerCategoryRouter from './api/careerCategories'
 import authRouter from './api/auth'
+import userRouter from './api/users'
 
 logger.info('API 라우터 올라옴')
 
@@ -16,3 +17,4 @@ export const apiRouter = router
   .use('/categories', categoryRouter)
   .use('/careerCategories', careerCategoryRouter)
   .use('/auth', authRouter)
+  .use('/users', userRouter)
