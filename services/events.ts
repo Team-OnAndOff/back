@@ -14,14 +14,22 @@ import { CareerCategory } from '../models/typeorm/entity/CareerCategory'
 import { EventHashTag } from '../models/typeorm/entity/EventHashTag'
 import { EventLikeBodyDTO } from '../models/typeorm/dto/EventLIkeDTO'
 import { EventLike } from '../models/typeorm/entity/EventLike'
+import {
+  EventApplyBodyDTO,
+  EventApplyUpdateBodyDTO,
+} from '../models/typeorm/dto/EventAppliesDTO'
+import { EventApply } from '../models/typeorm/entity/EventApply'
+import { EVENT_APPLY_FLAG, EVENT_APPLY_STATUS } from '../types'
 
 class EventService {
   private readonly eventRepo
   private readonly eventLikeRepo
+  private readonly eventApplyRepo
 
   constructor() {
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventLikeRepo = AppDataSource.getRepository(EventLike)
+    this.eventApplyRepo = AppDataSource.getRepository(EventApply)
   }
 
   getQueryBuilder = () => {
@@ -35,6 +43,13 @@ class EventService {
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .loadRelationCountAndMap('event.likes', 'event.likes')
+  }
+
+  getAppliesQueryBuilder = () => {
+    return this.eventApplyRepo
+      .createQueryBuilder('eventApply')
+      .innerJoinAndSelect('eventApply.user', 'user')
+      .leftJoinAndSelect('user.image', 'userImage')
   }
 
   async getEvents(query: EventQueryDTO) {
@@ -71,6 +86,7 @@ class EventService {
   }
 
   async createEvent(body: EventBodyDTO, file: ImageDTO) {
+    const currentDate = new Date()
     const user = await UserService.findOneById(body.userId)
     const category = await CategoryService.getSubCategoryById(
       body.categoryId,
@@ -136,6 +152,18 @@ class EventService {
 
         event.careerCategories = careerCategories
       }
+
+      const applies: EventApply[] = []
+      const apply = new EventApply()
+      apply.user = user
+      apply.event = event
+      apply.answer = ''
+      apply.flag = EVENT_APPLY_FLAG.LEADER
+      apply.appliedAt = currentDate
+      apply.approvedAt = currentDate
+      apply.status = EVENT_APPLY_STATUS.APPROVED
+      applies.push(apply)
+      event.eventApplies = applies
 
       const response = await AppDataSource.manager.save(event)
       return response
@@ -238,6 +266,122 @@ class EventService {
         .execute()
     }
 
+    return response
+  }
+
+  async getEventApplies(eventId: number, status?: string) {
+    const queryBuilder = await this.getAppliesQueryBuilder().where(
+      'eventApply.eventId = :eventId',
+      { eventId },
+    )
+
+    if (status) {
+      queryBuilder.andWhere('eventApply.status = :status', {
+        status: Number(status),
+      })
+    }
+
+    const response = await queryBuilder.getMany()
+    return response
+  }
+
+  async getEventApply(applyId: number) {
+    const response = await this.getAppliesQueryBuilder()
+      .where('eventApply.id = :applyId', { applyId })
+      .getOne()
+
+    if (!response) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '데이터가 존재하지 않습니다.',
+      )
+    }
+
+    return response
+  }
+
+  async createEventApply(eventId: number, body: EventApplyBodyDTO) {
+    const event = await this.getEventById(eventId)
+    const user = await UserService.findOneById(body.userId)
+
+    if (!user) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '유저가 존재하지 않음',
+      )
+    }
+
+    const existApply = await this.getAppliesQueryBuilder()
+      .where('eventApply.eventId = :eventId', { eventId })
+      .andWhere('eventApply.userId = :userId', { userId: user.id })
+      .getOne()
+
+    if (existApply) {
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, '이미 신청했습니다.')
+    }
+
+    const apply = new EventApply()
+    apply.event = event
+    apply.user = user
+    apply.answer = body.answer
+    apply.flag = EVENT_APPLY_FLAG.MEMBER
+    apply.appliedAt = new Date()
+    apply.status = EVENT_APPLY_STATUS.APPLY
+
+    const response = await AppDataSource.manager.save(apply)
+    return response
+  }
+
+  async deleteEventApply(eventId: number, applyId: number) {
+    const response = await AppDataSource.manager.transaction(
+      async (transactionalEntityManager) => {
+        return await transactionalEntityManager
+          .createQueryBuilder()
+          .delete()
+          .from(EventApply)
+          .where('id = :id', { id: applyId })
+          .andWhere('eventId = :eventId', { eventId })
+          .execute()
+      },
+    )
+    if (response.affected === 0) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '삭제할 데이터가 존재하지 않습니다.',
+      )
+    }
+    return response
+  }
+
+  async updateEventApply(
+    eventId: number,
+    applyId: number,
+    dto: EventApplyUpdateBodyDTO,
+  ) {
+    const { userId, ...data } = dto
+    const filteredData = Object.entries(data)
+      .filter(([_, value]) => value !== undefined)
+      .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {})
+
+    const response = await AppDataSource.manager.transaction(
+      async (transactionalEntityManager) => {
+        return await transactionalEntityManager
+          .createQueryBuilder()
+          .update(EventApply)
+          .set(filteredData)
+          .where('id = :id', { id: applyId })
+          .andWhere('eventId = :eventId', { eventId })
+          .andWhere('userId = :userId', { userId })
+          .execute()
+      },
+    )
+
+    if (response.affected === 0) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '수정할 데이터가 존재하지 않습니다.',
+      )
+    }
     return response
   }
 }

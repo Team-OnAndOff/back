@@ -62,7 +62,7 @@ export class User extends BaseAutoIdEntity {
   })
   attendeeAssess?: UserAssess[]
 
-  @OneToMany(() => EventApply, (apply) => apply.userId, {
+  @OneToMany(() => EventApply, (apply) => apply.user, {
     nullable: true,
   })
   eventApplies?: EventApply[]

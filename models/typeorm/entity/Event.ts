@@ -65,7 +65,10 @@ export class Event extends BaseAutoIdEntity {
   @OneToMany(() => UserAssess, (assess) => assess.eventId, { nullable: true })
   userAssess?: UserAssess[]
 
-  @OneToMany(() => EventApply, (apply) => apply.eventId, { nullable: true })
+  @OneToMany(() => EventApply, (apply) => apply.event, {
+    nullable: true,
+    cascade: true,
+  })
   eventApplies?: EventApply[]
 
   @OneToMany(() => EventHashTag, (hashTag) => hashTag.eventId, {
