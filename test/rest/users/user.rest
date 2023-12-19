@@ -1,0 +1,72 @@
+@ENDPOINT = http://localhost:3000/api
+@USERID = 7
+@LOGIN_COOKIE = SESSIONID=s%3AxOX27dOUaco6bekOXlWsWazOiS1QSv5s.%2FiFwtO4rncIAlALDbCVC3J%2BS2Pr9oIGxLrw%2BTNGTfYw
+###
+GET {{ENDPOINT}}/users/{{USERID}}/info
+Cookie: {{LOGIN_COOKIE}}
+
+###
+GET {{ENDPOINT}}/users/{{USERID}}/detail
+Cookie: {{LOGIN_COOKIE}}
+
+
+###
+
+GET {{ENDPOINT}}/auth/logout
+
+
+###
+
+PUT {{ENDPOINT}}/users/7{{USERID}}
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+{
+    "username": "누구?",
+    "introduction": "11",
+    "email": "abb1aaab@gmail.com"
+}
+
+###
+
+POST {{ENDPOINT}}/users/assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+{
+    "eventId": 1,
+    "attendeeId": 6,
+    "score": 3,
+    "description": "abb1aaab gmail qqq"
+}
+
+###
+
+PUT {{ENDPOINT}}/users/assess/7
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+{
+    "score": 2,
+    "description": "1행복하신 분이시네요."
+}
+
+###
+
+DELETE {{ENDPOINT}}/users/assess/4
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+###
+
+GET {{ENDPOINT}}/users/7/assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+###
+
+GET {{ENDPOINT}}/users/6/my-assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+

@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express'
 import cookieParser from 'cookie-parser'
 import session from 'express-session'
 import createMemoryStore from 'memorystore'
+import FileStore from 'session-file-store'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import path from 'path'
@@ -41,16 +42,21 @@ app.use(express.json())
 app.use(cors())
 app.use(cookieParser())
 
-const MemoryStore = createMemoryStore(session)
 const checkPeriod = 24 * 60 * 60 * 1000
-const memoryStore = new MemoryStore({ checkPeriod })
+// const MemoryStore = createMemoryStore(session)
+// const memoryStore = new MemoryStore({ checkPeriod })
+
 app.use(
   session({
     secret: '!@E@E$#T4twerwf@#%ew^&rrrr',
-    store: memoryStore,
+    // store: memoryStore,
+    store: new (FileStore(session))({
+      path: path.join(__dirname, 'sessions'),
+    }),
     resave: true,
-    saveUninitialized: false,
+    saveUninitialized: true,
     cookie: { maxAge: checkPeriod },
+    name: 'SESSIONID',
   }),
 )
 
