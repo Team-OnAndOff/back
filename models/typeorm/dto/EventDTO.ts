@@ -31,6 +31,7 @@ interface EventRequestBody {
 
 export interface EventRequestParams {
   readonly id: number
+  readonly applyId: number
 }
 
 export interface EventRequestQuery extends ParsedQs {
@@ -126,8 +127,13 @@ export class EventParamsDTO {
   @IsNumberString()
   readonly id: number
 
+  @IsOptional()
+  @IsNumberString()
+  readonly applyId?: number
+
   constructor(params: EventRequestParams) {
     this.id = params.id
+    this.applyId = params.applyId
   }
 }
 

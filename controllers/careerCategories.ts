@@ -1,25 +1,15 @@
-import { Request } from 'express'
 import httpStatus from 'http-status'
 import { catchAsync } from '../utils/catchAsync'
 import service from '../services/careerCategories'
 import {
-  CareerCategoryBodyDTO,
-  CareerCategoryParamsDTO,
-  CareerCategoryRequestParams,
+  CareerCategoryBodyDTO as BodyDTO,
+  CareerCategoryParamsDTO as ParamsDTO,
 } from '../models/typeorm/dto/CareerCategoryDTO'
 import { CareerCategory } from '../models/typeorm/entity/CareerCategory'
 import { createResponse } from '../utils/createResponse'
+import RequestHandler from './requestHandler'
 
-export default class CareerCategoryController {
-  private static extractParams(req: Request): CareerCategoryParamsDTO {
-    const params = req.params as unknown as CareerCategoryRequestParams
-    return new CareerCategoryParamsDTO(params)
-  }
-
-  private static extractBody(req: Request): CareerCategoryBodyDTO {
-    return new CareerCategoryBodyDTO(req.body)
-  }
-
+export default class CareerCategoryController extends RequestHandler {
   static getCareerCategories = catchAsync(async (req, res, next) => {
     const careerCategories = await service.getCareerCategories()
     res
@@ -28,7 +18,7 @@ export default class CareerCategoryController {
   })
 
   static getCareerCategory = catchAsync(async (req, res, next) => {
-    const params = CareerCategoryController.extractParams(req)
+    const params = this.extractParams<ParamsDTO>(req, ParamsDTO)
     const { id } = params
     const careerCategory = await service.getCareerCategoryById(id)
     res
@@ -37,7 +27,7 @@ export default class CareerCategoryController {
   })
 
   static createCareerCategory = catchAsync(async (req, res, next) => {
-    const body = CareerCategoryController.extractBody(req)
+    const body = this.extractBody<BodyDTO>(req, BodyDTO)
     const careerCategory = await service.createCareerCategory(body)
     res
       .status(httpStatus.OK)
@@ -45,8 +35,8 @@ export default class CareerCategoryController {
   })
 
   static updateCareerCategory = catchAsync(async (req, res, next) => {
-    const params = CareerCategoryController.extractParams(req)
-    const body = CareerCategoryController.extractBody(req)
+    const params = this.extractParams<ParamsDTO>(req, ParamsDTO)
+    const body = this.extractBody<BodyDTO>(req, BodyDTO)
     const { id } = params
     const careerCategory = await service.updateCareerCategoryById(id, body)
     res
@@ -55,7 +45,7 @@ export default class CareerCategoryController {
   })
 
   static deleteCareerCategory = catchAsync(async (req, res, next) => {
-    const params = CareerCategoryController.extractParams(req)
+    const params = this.extractParams<ParamsDTO>(req, ParamsDTO)
     const { id } = params
     await service.deleteCareerCategoryById(id)
     res.status(httpStatus.OK).json(createResponse<CareerCategory>())
