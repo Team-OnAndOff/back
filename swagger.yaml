@@ -273,6 +273,42 @@ paths:
           required: false
           schema:
             type: string
+        - name: sort
+          in: query
+          description: 정렬 기준 (likes)
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: 정렬 순서 (ASC, DESC)
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 최대 개수
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: 검색내용
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 현재페이지
+          required: false
+          schema:
+            type: string
+        - name: perPage
+          in: query
+          description: 한페이지에 보여줄 목록 개수
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: 성공
@@ -301,6 +337,7 @@ paths:
                 - image
                 - categoryId
                 - subCategoryId
+                - careerCategoryId
                 - title
                 - content
                 - recruitment

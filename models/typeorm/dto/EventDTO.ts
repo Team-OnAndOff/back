@@ -12,6 +12,7 @@ import {
   IsDefined,
 } from 'class-validator'
 import { EventAddressDTO } from './EventAddressDTO'
+import { EVENT_ORDER, EVENT_SORT } from '../../../types'
 
 interface EventRequestBody {
   readonly categoryId: number
@@ -37,6 +38,12 @@ export interface EventRequestParams {
 export interface EventRequestQuery extends ParsedQs {
   readonly categoryId: string
   readonly subCategoryId: string
+  readonly sort: EVENT_SORT
+  readonly order: EVENT_ORDER
+  readonly limit: string
+  readonly search: string
+  readonly page: string
+  readonly perPage: string
 }
 
 export class EventBodyDTO {
@@ -53,9 +60,9 @@ export class EventBodyDTO {
   readonly subCategoryId: number
 
   @IsArray()
-  @IsOptional()
+  @IsNotEmpty()
   @IsDefined()
-  readonly careerCategoryIds?: number[]
+  readonly careerCategoryIds!: number[]
 
   @IsOptional()
   @IsArray()
@@ -146,8 +153,38 @@ export class EventQueryDTO {
   @IsNumberString()
   readonly subCategoryId: string
 
+  @IsOptional()
+  @IsString()
+  readonly sort: EVENT_SORT
+
+  @IsOptional()
+  @IsString()
+  readonly order: EVENT_ORDER
+
+  @IsOptional()
+  @IsNumberString()
+  readonly limit: string
+
+  @IsOptional()
+  @IsString()
+  readonly search: string
+
+  @IsOptional()
+  @IsNumberString()
+  readonly page: string
+
+  @IsOptional()
+  @IsNumberString()
+  readonly perPage: string
+
   constructor(params: EventRequestQuery) {
     this.categoryId = params.categoryId
     this.subCategoryId = params.subCategoryId
+    this.sort = params.sort
+    this.order = params.order
+    this.limit = params.limit
+    this.search = params.search
+    this.page = params.page
+    this.perPage = params.perPage
   }
 }
