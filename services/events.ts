@@ -100,7 +100,7 @@ class EventService {
       )
     }
 
-    const upload = await s3Upload(file)
+    const upload = await s3Upload(file, 'events')
     try {
       const event = new Event()
       event.user = user

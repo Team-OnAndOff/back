@@ -33,21 +33,21 @@ const s3Params = (key: string, image?: ImageDTO) => {
   }
 }
 
-const s3FileName = (image: ImageDTO) => {
-  return `events/${Date.now()}-${image.originalname}`
+const s3FileName = (image: ImageDTO, folderName: string) => {
+  return `${folderName}/${Date.now()}-${image.originalname}`
 }
 
 const s3Destination = (key: string) => {
   return `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`
 }
 
-const s3Upload = async (image: ImageDTO) => {
+const s3Upload = async (image: ImageDTO, folderName: string) => {
   try {
     if (!image.buffer) {
       throw new ApiError(httpStatus.BAD_REQUEST, 'Image buffer is required.')
     }
 
-    const filename = s3FileName(image)
+    const filename = s3FileName(image, folderName)
     const client = s3Client()
     const params = s3Params(filename, image)
 
