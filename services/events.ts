@@ -75,6 +75,14 @@ class EventService {
 
   async getEventById(eventId: number) {
     const event = await this.getQueryBuilder()
+      .leftJoinAndSelect(
+        'event.eventApplies',
+        'eventApplies',
+        'eventApplies.status = :status AND eventApplies.flag = :flag AND eventApplies.approvedAt IS NOT NULL AND eventApplies.deletedAt IS NULL',
+        { status: EVENT_APPLY_STATUS.APPROVED, flag: EVENT_APPLY_FLAG.MEMBER },
+      )
+      .innerJoinAndSelect('eventApplies.user', 'appliedUser')
+      .innerJoinAndSelect('appliedUser.image', 'appliedUserImage')
       .where('event.id = :eventId', { eventId })
       .getOne()
 
