@@ -6,6 +6,8 @@ info:
 servers:
   - url: http://localhost:4000/api
 tags:
+  - name: auth
+    description: 인증 API
   - name: users
     description: 유저 API
   - name: events
@@ -18,6 +20,76 @@ tags:
     description: 카테고리 API
 
 paths:
+  /auth/login/{social}:
+    get:
+      tags:
+        - auth
+      summary: 소셜 로그인
+      description: 소셜 로그인 API
+      parameters:
+        - name: social
+          in: path
+          description: 소셜 ID(google, kakao, facebook, naver, github 중 1)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/login/{social}/callback:
+    get:
+      tags:
+        - auth
+      summary: 소셜 로그인(콜백)
+      description: 소셜 로그인(콜백) API
+      parameters:
+        - name: social
+          in: path
+          description: 소셜 ID(google, kakao, facebook, naver, github 중 1)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      summary: 로그아웃
+      description: 로그아웃 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/withdraw:
+    get:
+      tags:
+        - auth
+      summary: 회원탈퇴
+      description: 회원탈퇴 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
   /users/{userId}/{type}:
     get:
       tags:
@@ -28,13 +100,13 @@ paths:
         - name: userId
           in: path
           description: 유저 ID
-          required: false
+          required: true
           schema:
             type: string
         - name: type
           in: path
           description: info(기본정보), detail(상세정보 로그인필요)
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -61,7 +133,7 @@ paths:
         - name: userId
           in: path
           description: 유저 ID
-          required: false
+          required: true
           schema:
             type: string
       requestBody:
@@ -95,7 +167,7 @@ paths:
         - name: userId
           in: path
           description: 유저 ID
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -116,7 +188,7 @@ paths:
         - name: userId
           in: path
           description: 유저 ID
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -151,7 +223,7 @@ paths:
         - name: assessId
           in: path
           description: 평가 ID
-          required: false
+          required: true
           schema:
             type: string
       responses:
@@ -171,7 +243,7 @@ paths:
         - name: assessId
           in: path
           description: 평가 ID
-          required: false
+          required: true
           schema:
             type: string
       responses:
