@@ -6,6 +6,8 @@ info:
 servers:
   - url: http://localhost:4000/api
 tags:
+  - name: users
+    description: 유저 API
   - name: events
     description: 모임 API
   - name: reports-event
@@ -16,6 +18,170 @@ tags:
     description: 카테고리 API
 
 paths:
+  /users/{userId}/{type}:
+    get:
+      tags:
+        - users
+      summary: 유저정보
+      description: 유저 정보를 가져오는 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: false
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: info(기본정보), detail(상세정보 로그인필요)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}:
+    put:
+      tags:
+        - users
+      summary: 유저정보 수정
+      description: 유저정보 수정 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: 홍길동
+                introduction:
+                  type: string
+                  example: 안녕하세요. 홍길동입니다.
+        required: true
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}/assess:
+    get:
+      tags:
+        - users
+      summary: 내가 평가한 사람 목록
+      description: 내가 평가한 사람 목록 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}/my-assess:
+    get:
+      tags:
+        - users
+      summary: 나를 평가한 사람 목록
+      description: 나를 평가한 사람 목록 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/assess:
+    post:
+      tags:
+        - users
+      summary: 유저평가
+      description: 유저평가 API
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/assess/{assessId}:
+    put:
+      tags:
+        - users
+      summary: 유저평가 수정
+      description: 유저평가 수정 API
+      parameters:
+        - name: assessId
+          in: path
+          description: 평가 ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - users
+      summary: 유저평가 삭제
+      description: 유저평가 삭제 API
+      parameters:
+        - name: assessId
+          in: path
+          description: 평가 ID
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
   /events:
     get:
       tags:
@@ -1000,6 +1166,36 @@ paths:
 
 components:
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        image:
+          $ref: '#/components/schemas/Image'
+        socialId:
+          type: string
+          example: 13251342
+          description: 소셜 ID
+        provider:
+          type: string
+          example: 카카오
+          description: 소셜 로그인 제공자
+        username:
+          type: string
+          example: 홍길동
+          description: 이름(닉네임)
+        email:
+          type: string
+          example: google@google.com
+          description: 이메일
+        introduction:
+          type: string
+          example: 안녕하세요. 홍길동입니다.
+          description: 한줄 소개
+
     Event:
       type: object
       properties:
