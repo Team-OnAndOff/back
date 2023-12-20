@@ -14,6 +14,7 @@ import {
   EventApplyQueryDTO as ApplyQueryDTO,
   EventApplyUpdateBodyDTO as ApplyUpdateBodyDTO,
 } from '../../models/typeorm/dto/EventAppliesDTO'
+import { isLogin } from '../../config/passport'
 
 const router = Router()
 
@@ -23,6 +24,7 @@ router.get('/:id', validate(ParamsDTO, 'params'), EventController.getEvent)
 
 router.post(
   '/',
+  isLogin,
   upload.single('image'),
   validate(BodyDTO),
   validate(ImageDTO, 'file'),
@@ -38,12 +40,14 @@ router.post(
 
 router.delete(
   '/:id',
+  isLogin,
   validate(ParamsDTO, 'params'),
   EventController.deleteEvent,
 )
 
 router.put(
   '/:id/likes',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(EventLikeBodyDTO),
   EventController.updateEventLike,
@@ -58,6 +62,7 @@ router.get(
 
 router.post(
   '/:id/applies',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(ApplyBodyDTO),
   EventController.createEventApply,
@@ -65,6 +70,7 @@ router.post(
 
 router.delete(
   '/:id/applies/:applyId',
+  isLogin,
   validate(ParamsDTO, 'params'),
   EventController.deleteEventApply,
 )
@@ -77,6 +83,7 @@ router.get(
 
 router.put(
   '/:id/applies/:applyId/answer',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(ApplyUpdateBodyDTO),
   EventController.updateEventApply,
@@ -84,6 +91,7 @@ router.put(
 
 router.put(
   '/:id/applies/:applyId/flag',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(ApplyUpdateBodyDTO),
   EventController.updateEventApply,
@@ -91,6 +99,7 @@ router.put(
 
 router.put(
   '/:id/applies/:applyId/status',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(ApplyUpdateBodyDTO),
   EventController.updateEventApply,
