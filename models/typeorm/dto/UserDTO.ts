@@ -1,5 +1,9 @@
 import { IsString, IsNotEmpty, IsNumberString } from 'class-validator'
 import { OAuthEnum } from '../../../routes/api/auth'
+import { ImageDTO } from './ImageDTO'
+import multer from 'multer'
+import { Image } from '../entity/Image'
+import { uuid } from 'uuidv4'
 
 export class CreateUserDTO {
   username: string
@@ -45,16 +49,32 @@ interface UpdateUserBody {
   introduce?: string
   image?: any
 }
+
+const MIME_TYPE_MAP = {
+  'image/png': 'png',
+  'image/jpeg': 'jpeg',
+  'image/jpg': 'jpg',
+}
+
 export class UpdateUserDTO extends UserIdDTO {
   username?: string
   email?: string
   introduction?: string
-  image?: any
-  constructor(userId: string, body: UpdateUserBody) {
+  image?: Express.Multer.File
+  constructor(
+    userId: string,
+    body: UpdateUserBody,
+    image?: Express.Multer.File,
+  ) {
     super(userId)
     this.username = body.username
     if (body) {
       Object.assign(this, body)
+    }
+    if (image) {
+      this.image = image
+      const [ext, ..._] = image.originalname.split('.').reverse()
+      image.originalname = `${uuid()}.${ext}`
     }
   }
 }

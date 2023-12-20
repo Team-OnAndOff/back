@@ -65,53 +65,23 @@ class EventService {
   }
 
   async getEvents(query: EventQueryDTO) {
-    const {
-      categoryId,
-      subCategoryId,
-      sort,
-      order = EVENT_ORDER.DESC,
-      limit,
-      search,
-      page,
-      perPage,
-    } = query
+    const { categoryId, subCategoryId } = query
     const queryBuilder = this.getQueryBuilder()
     queryBuilder.where('1=1')
     if (categoryId) {
-      queryBuilder.andWhere('category.id = :categoryId', { categoryId })
+      queryBuilder.where('category.id = :categoryId', {
+        categoryId: categoryId,
+      })
     }
 
     if (subCategoryId) {
       queryBuilder.andWhere('subCategory.id = :subCategoryId', {
-        subCategoryId,
+        subCategoryId: subCategoryId,
       })
     }
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(event.title LIKE :search OR hashtag.hashTag LIKE :search)',
-        { search: `%${search}%` },
-      )
-    }
-
-    if (limit) {
-      queryBuilder.take(Number(limit))
-    }
-
-    if (page && perPage) {
-      queryBuilder
-        .select()
-        .take(Number(perPage))
-        .skip((Number(page) - 1) * Number(perPage))
-    }
-
-    if (sort === EVENT_SORT.LIKES) {
-      queryBuilder.orderBy('eventLikes', order)
-    } else {
-      queryBuilder.orderBy('event.createdAt', order)
-    }
-
     const events = await queryBuilder.getMany()
+
     return events
   }
 

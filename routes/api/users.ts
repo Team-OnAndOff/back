@@ -7,7 +7,13 @@ import { ApiError } from '../../utils/error'
 import HttpStatus from 'http-status'
 import { isLogin, passport } from '../../config/passport'
 import { logger } from '../../config/logger'
+// import { upload } from '../../utils/upload'
+import multer from 'multer'
 const router = Router()
+
+var upload = multer({
+  storage: multer.memoryStorage(),
+})
 
 const getUserValidator = {
   params: z
@@ -100,6 +106,7 @@ router.get(
 
 router.put(
   '/:user_id',
+  upload.single('image'),
   isLogin,
   validateRequest(updateUserValidator),
   UserController.updateUser,
