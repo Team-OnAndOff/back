@@ -17,15 +17,21 @@ GET {{ENDPOINT}}/auth/logout
 
 ###
 
-PUT {{ENDPOINT}}/users/7{{USERID}}
+PUT {{ENDPOINT}}/users/{{USERID}}
 Cookie: {{LOGIN_COOKIE}}
-content-type: application/json
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="aa.png"
+Content-Type: image/png
 
-{
-    "username": "누구?",
-    "introduction": "11",
-    "email": "abb1aaab@gmail.com"
-}
+< D:/aa.png
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="username"
+Content-Type: text
+
+aasd
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+
 
 ###
 

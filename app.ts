@@ -25,6 +25,7 @@ import { ApiError } from './utils/error'
 import cors from 'cors'
 
 export const app = express()
+
 const swaggerSpec = YAML.load(path.join(__dirname, './swagger.yaml'))
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
