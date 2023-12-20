@@ -5,6 +5,7 @@ import {
   ReportEventBodyDTO as BodyDTO,
   ReportEventParamsDTO as ParamsDTO,
 } from '../../models/typeorm/dto/ReportEventDTO'
+import { isLogin } from '../../config/passport'
 
 const router = Router()
 
@@ -22,6 +23,11 @@ router.get(
   ReportEventsController.getReportEventByReportId,
 )
 
-router.post('/', validate(BodyDTO), ReportEventsController.createReportEvent)
+router.post(
+  '/',
+  isLogin,
+  validate(BodyDTO),
+  ReportEventsController.createReportEvent,
+)
 
 export default router
