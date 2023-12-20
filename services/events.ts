@@ -19,7 +19,12 @@ import {
   EventApplyUpdateBodyDTO,
 } from '../models/typeorm/dto/EventAppliesDTO'
 import { EventApply } from '../models/typeorm/entity/EventApply'
-import { EVENT_APPLY_FLAG, EVENT_APPLY_STATUS } from '../types'
+import {
+  EVENT_APPLY_FLAG,
+  EVENT_APPLY_STATUS,
+  EVENT_ORDER,
+  EVENT_SORT,
+} from '../types'
 
 class EventService {
   private readonly eventRepo
@@ -42,7 +47,14 @@ class EventService {
       .leftJoinAndSelect('event.image', 'image')
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
-      .loadRelationCountAndMap('event.likes', 'event.likes')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .innerJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
   }
 
   getAppliesQueryBuilder = () => {
@@ -53,23 +65,53 @@ class EventService {
   }
 
   async getEvents(query: EventQueryDTO) {
-    const { categoryId, subCategoryId } = query
+    const {
+      categoryId,
+      subCategoryId,
+      sort,
+      order = EVENT_ORDER.DESC,
+      limit,
+      search,
+      page,
+      perPage,
+    } = query
     const queryBuilder = this.getQueryBuilder()
-
+    queryBuilder.where('1=1')
     if (categoryId) {
-      queryBuilder.where('category.id = :categoryId', {
-        categoryId: categoryId,
-      })
+      queryBuilder.andWhere('category.id = :categoryId', { categoryId })
     }
 
     if (subCategoryId) {
       queryBuilder.andWhere('subCategory.id = :subCategoryId', {
-        subCategoryId: subCategoryId,
+        subCategoryId,
       })
     }
 
-    const events = await queryBuilder.getMany()
+    if (search) {
+      queryBuilder.andWhere(
+        '(event.title LIKE :search OR hashtag.hashTag LIKE :search)',
+        { search: `%${search}%` },
+      )
+    }
 
+    if (limit) {
+      queryBuilder.take(Number(limit))
+    }
+
+    if (page && perPage) {
+      queryBuilder
+        .select()
+        .take(Number(perPage))
+        .skip((Number(page) - 1) * Number(perPage))
+    }
+
+    if (sort === EVENT_SORT.LIKES) {
+      queryBuilder.orderBy('eventLikes', order)
+    } else {
+      queryBuilder.orderBy('event.createdAt', order)
+    }
+
+    const events = await queryBuilder.getMany()
     return events
   }
 

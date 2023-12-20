@@ -20,3 +20,12 @@ export enum EVENT_APPLY_FLAG {
   MEMBER = 0, // 팀원
   LEADER = 1, // 방장
 }
+
+export enum EVENT_SORT {
+  LIKES = 'likes',
+}
+
+export enum EVENT_ORDER {
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
