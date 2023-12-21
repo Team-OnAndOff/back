@@ -12,7 +12,6 @@ import { Image } from '../models/typeorm/entity/Image'
 import { EventAddress } from '../models/typeorm/entity/EventAddress'
 import { CareerCategory } from '../models/typeorm/entity/CareerCategory'
 import { EventHashTag } from '../models/typeorm/entity/EventHashTag'
-import { EventLikeBodyDTO } from '../models/typeorm/dto/EventLIkeDTO'
 import { EventLike } from '../models/typeorm/entity/EventLike'
 import {
   EventApplyBodyDTO,
@@ -248,9 +247,9 @@ class EventService {
     return response
   }
 
-  async updateEventLike(eventId: number, body: EventLikeBodyDTO) {
+  async updateEventLike(eventId: number, userId: number) {
     const event = await this.getEventById(eventId)
-    const user = await UserService.findOneById(body.userId)
+    const user = await UserService.findOneById(userId)
 
     if (!user) {
       throw new ApiError(
@@ -262,7 +261,7 @@ class EventService {
     const existingEventLike = await this.eventLikeRepo
       .createQueryBuilder('like')
       .where('like.event = :eventId', { eventId })
-      .andWhere('like.user = :userId', { userId: body.userId })
+      .andWhere('like.user = :userId', { userId })
       .getOne()
 
     let response
@@ -289,7 +288,9 @@ class EventService {
     return response
   }
 
-  async getEventApplies(eventId: number, status?: string) {
+  async getEventApplies(userId: number, eventId: number, status?: string) {
+    await this.isEventLeader(userId, eventId)
+
     const queryBuilder = await this.getAppliesQueryBuilder().where(
       'eventApply.eventId = :eventId',
       { eventId },
@@ -320,9 +321,13 @@ class EventService {
     return response
   }
 
-  async createEventApply(eventId: number, body: EventApplyBodyDTO) {
+  async createEventApply(
+    userId: number,
+    eventId: number,
+    body: EventApplyBodyDTO,
+  ) {
     const event = await this.getEventById(eventId)
-    const user = await UserService.findOneById(body.userId)
+    const user = await UserService.findOneById(userId)
 
     if (!user) {
       throw new ApiError(
@@ -334,6 +339,9 @@ class EventService {
     const existApply = await this.getAppliesQueryBuilder()
       .where('eventApply.eventId = :eventId', { eventId })
       .andWhere('eventApply.userId = :userId', { userId: user.id })
+      .andWhere('eventApply.status = :status', {
+        status: EVENT_APPLY_STATUS.APPLY,
+      })
       .getOne()
 
     if (existApply) {
@@ -402,6 +410,20 @@ class EventService {
         '수정할 데이터가 존재하지 않습니다.',
       )
     }
+    return response
+  }
+
+  async isEventLeader(userId: number, eventId: number) {
+    const response = await this.getAppliesQueryBuilder()
+      .where('eventApply.userId = :userId', { userId })
+      .andWhere('eventApply.eventId = :eventId', { eventId })
+      .andWhere('eventApply.flag = :flag', { flag: EVENT_APPLY_FLAG.LEADER })
+      .getOne()
+
+    if (!response) {
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, '방장이 아닙니다.')
+    }
+
     return response
   }
 }

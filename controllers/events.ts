@@ -52,24 +52,23 @@ export default class EventController extends RequestHandler {
     res.status(httpStatus.OK).json(createResponse<Event>())
   })
 
-  static updateEventLike = catchAsync(async (req, res, next) => {
+  static updateEventLike = catchAsync(async (req: any, res, next) => {
     const { id } = this.extractParams<ParamsDTO>(req, ParamsDTO)
-    const body = this.extractBody<BodyDTO>(req, BodyDTO)
-    await service.updateEventLike(id, body)
+    await service.updateEventLike(id, req.user.id)
     res.status(httpStatus.OK).json(createResponse<Event>())
   })
 
-  static getEventApplies = catchAsync(async (req, res, next) => {
+  static getEventApplies = catchAsync(async (req: any, res, next) => {
     const { id } = this.extractParams<ParamsDTO>(req, ParamsDTO)
     const { status } = this.extractQuery<ApplyQueryDTO>(req, ApplyQueryDTO)
-    const response = await service.getEventApplies(id, status)
+    const response = await service.getEventApplies(req.user.id, id, status)
     res.status(httpStatus.OK).json(createResponse<EventApply[]>(response))
   })
 
-  static createEventApply = catchAsync(async (req, res, next) => {
+  static createEventApply = catchAsync(async (req: any, res, next) => {
     const { id } = this.extractParams<ParamsDTO>(req, ParamsDTO)
     const body = this.extractBody<ApplyBodyDTO>(req, ApplyBodyDTO)
-    await service.createEventApply(id, body)
+    await service.createEventApply(req.user.id, id, body)
     res.status(httpStatus.OK).json(createResponse<EventApply>())
   })
 

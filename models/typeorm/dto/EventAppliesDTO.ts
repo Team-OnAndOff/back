@@ -7,21 +7,15 @@ import {
 } from 'class-validator'
 
 interface EventApplyRequestBody {
-  readonly userId: number
   readonly answer: string
 }
 
 export class EventApplyBodyDTO implements EventApplyRequestBody {
   @IsNotEmpty()
-  @IsNumber()
-  readonly userId: number
-
-  @IsNotEmpty()
   @IsString()
   readonly answer: string
 
   constructor(body: EventApplyRequestBody) {
-    this.userId = body.userId
     this.answer = body.answer
   }
 }
