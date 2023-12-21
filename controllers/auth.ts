@@ -18,7 +18,8 @@ export default class AuthController {
         return next(err)
       }
       req.session.destroy(function (err: any) {
-        res.clearCookie('connect.sid')
+        // res.clearCookie('connect.sid')
+        res.clearCookie('SESSIONID')
         res.status(httpStatus.OK).json({ message: '로그아웃 성공' })
       })
     })
