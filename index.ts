@@ -44,7 +44,7 @@ const exitHandler = () => {
 }
 
 const unexpectedErrorHandler = (error: any) => {
-  logger.error(error)
+  logger.error(error.stack)
   exitHandler()
 }
 

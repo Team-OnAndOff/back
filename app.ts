@@ -6,6 +6,7 @@ import FileStore from 'session-file-store'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import path from 'path'
+import flash from 'connect-flash'
 import { passport, setOauthStrategies } from './config/passport'
 
 import { apiRouter } from './routes/index'
@@ -66,6 +67,7 @@ app.use(passport.session())
 
 setOauthStrategies(app)
 
+app.use(flash())
 app.use('/api', apiRouter)
 
 app.use((req: Request, res: Response, next: NextFunction) => {
