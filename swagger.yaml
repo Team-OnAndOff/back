@@ -1040,6 +1040,9 @@ paths:
                 flag:
                   type: number
                   example: 0
+                description:
+                  type: string
+                  example: 💡같은 관심사를 가진 사람들과의 모임은 어떨까요?💡
       responses:
         '201':
           description: 성공

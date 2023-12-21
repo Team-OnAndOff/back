@@ -36,4 +36,5 @@ export const AppDataSource = new DataSource({
   entities: ['models/typeorm/entity/*.ts'],
   migrations: [],
   subscribers: [],
+  charset: 'utf8mb4',
 })
