@@ -8,7 +8,6 @@ import {
 } from '../../models/typeorm/dto/EventDTO'
 import { ImageDTO } from '../../models/typeorm/dto/ImageDTO'
 import { upload } from '../../utils/upload'
-import { EventLikeBodyDTO } from '../../models/typeorm/dto/EventLIkeDTO'
 import {
   EventApplyBodyDTO as ApplyBodyDTO,
   EventApplyQueryDTO as ApplyQueryDTO,
@@ -49,12 +48,12 @@ router.put(
   '/:id/likes',
   isLogin,
   validate(ParamsDTO, 'params'),
-  validate(EventLikeBodyDTO),
   EventController.updateEventLike,
 )
 
 router.get(
   '/:id/applies',
+  isLogin,
   validate(ParamsDTO, 'params'),
   validate(ApplyQueryDTO, 'query'),
   EventController.getEventApplies,

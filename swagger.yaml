@@ -522,17 +522,6 @@ paths:
           required: true
           schema:
             type: number
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: number
-                  example: 1
-                  description: 유저 Id
-        required: true
       responses:
         '200':
           description: 성공
@@ -593,9 +582,6 @@ paths:
                 answer:
                   type: string
                   example: 자기소개 입니다.
-                userId:
-                  type: number
-                  example: 1
       responses:
         '201':
           description: 성공
