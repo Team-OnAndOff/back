@@ -47,6 +47,7 @@ class EventService {
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
       .leftJoinAndSelect('likes.user', 'eventLikesUser')
       .addSelect((subQuery) => {
         return subQuery
