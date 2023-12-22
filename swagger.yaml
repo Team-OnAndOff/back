@@ -114,12 +114,6 @@ paths:
       responses:
         '200':
           description: 성공
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
         '4xx':
           description: 잘못된 요청
         '5xx':
@@ -139,18 +133,24 @@ paths:
           schema:
             type: string
       requestBody:
+        required: false
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
                 username:
                   type: string
                   example: 홍길동
+                  description: 유저 이름(닉네임)
                 introduction:
-                  type: string
-                  example: 안녕하세요. 홍길동입니다.
-        required: true
+                  type: number
+                  example: 안녕하세요 홍길동 입니다.
+                  description: 소개
+                image:
+                  type: file
+                  example: https://example.com/image/image.png
+                  description: 유저 이미지
       responses:
         '200':
           description: 성공
@@ -246,6 +246,18 @@ paths:
           required: true
           schema:
             type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: number
+                  example: 1
+                description:
+                  type: string
+                  example: 너무 좋아요!!
       responses:
         '200':
           description: 성공
