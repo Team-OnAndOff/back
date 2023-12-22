@@ -15,11 +15,10 @@ var upload = multer({
   storage: multer.memoryStorage(),
 })
 
-const getUserValidator = {
+const getUserInfoValidator = {
   params: z
     .object({
       user_id: z.string(),
-      type: z.enum(['info', 'detail']),
     })
     .strict(),
 }
@@ -99,10 +98,11 @@ router.get(
   UserController.getAssessedList,
 )
 router.get(
-  '/:user_id/:type',
-  validateRequest(getUserValidator),
-  UserController.getUser,
+  '/:user_id/info',
+  validateRequest(getUserInfoValidator),
+  UserController.getUserInfo,
 )
+router.get('/detail', isLogin, UserController.getUserDetail)
 
 router.put(
   '/:user_id',

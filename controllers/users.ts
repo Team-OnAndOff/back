@@ -15,9 +15,12 @@ import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
 // import { IUserRequest } from '../config/passport'
 
+interface UserRequest extends Request {
+  user: User
+}
+
 export default class UserController {
-  static getUser = catchAsync(async (req, res, next) => {
-    const dto = new GetUserDTO(req.params.user_id, req.params.type)
+  static getUserInfo = catchAsync(async (req, res, next) => {
     const user_id = Number(req.params.user_id)
     const user = await userService.findOneById(user_id)
     if (!user) {
@@ -26,34 +29,20 @@ export default class UserController {
         '해당 아이디를 가진 유저가 존재하지 않습니다.',
       )
     }
-    if (req.params.type === 'info') {
-      res.status(httpStatus.OK).json(
-        new ResponseDTO(httpStatus.OK, '', {
-          user_id: user.id,
-          username: user.username,
-          email: user.email,
-          introduction: user.introduction,
-          image: user.image,
-        }),
-      )
-    } else if (req.params.type === 'detail') {
-      const reqUser: any = req.user
-
-      if (!req.isAuthenticated()) {
-        throw new ApiError(
-          httpStatus.NON_AUTHORITATIVE_INFORMATION,
-          '로그인한 사용자만 사용할 수 있습니다.',
-        )
-      }
-      if (reqUser.id !== user_id) {
-        throw new ApiError(
-          httpStatus.NON_AUTHORITATIVE_INFORMATION,
-          '유저 상세정보는 본인 정보만 확인가능합니다.',
-        )
-      }
-      const { socialId, ...rest } = user
-      res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', rest))
-    }
+    res.status(httpStatus.OK).json(
+      new ResponseDTO(httpStatus.OK, '', {
+        user_id: user.id,
+        username: user.username,
+        email: user.email,
+        introduction: user.introduction,
+        image: user.image,
+      }),
+    )
+  })
+  static getUserDetail = catchAsync(async (req, res, next) => {
+    const reqUser: any = req.user
+    const { socialId, ...rest } = reqUser
+    res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', rest))
   })
   static updateUser = catchAsync(async (req, res, next) => {
     const dto = new UpdateUserDTO(req.params.user_id, req.body, req.file)
