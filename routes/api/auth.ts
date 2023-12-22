@@ -30,7 +30,9 @@ const socialValidator = {
     })
     .strict(),
   query: z.object({
-    originUrl: z.string().optional(),
+    host: z.string().optional(),
+    redirectPath: z.string().optional(),
+    profilePath: z.string().optional(),
   }),
 }
 const socialCallbackValidator = {
@@ -46,8 +48,9 @@ router.get(
   validateRequest(socialValidator),
   (req, res, next) => {
     logger.info('social Login!', req.user)
-    req.session.originUrl = req.query.originUrl
-    req.session.save()
+    req.session.originUrl = `${req.query.host}${req.query.redirectPath}`
+    req.session.profileUrl = `${req.query.host}${req.query.profilePath}`
+    console.log(req.sessionID, req.session)
 
     const socialName = req.params.social
     let nextMiddleware = null
@@ -69,12 +72,22 @@ router.get(
 router.get(
   '/login/:social/callback',
   validateRequest(socialCallbackValidator),
+
   (req, res, next) => {
     logger.info('callback으로 돌아옴!')
     passport.authenticate(req.params.social, {
-      successRedirect: req.session.originUrl,
+      // successRedirect: req.session.originUrl,
     })(req, res, next)
-    console.log('callback route2', req.sessionID, req.session)
+  },
+  (req, res, next) => {
+    const reqUser: any = req.user
+    if (req.session.originUrl) {
+      if (req.session.isNewUser) {
+        res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
+      }
+      res.redirect(req.session.originUrl || '')
+    }
+    next()
   },
   AuthController.getLoginCallback,
 )

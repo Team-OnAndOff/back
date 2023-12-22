@@ -60,10 +60,25 @@ export const setOauthStrategies = (_app: Express) => {
         clientID: process.env.KAKAO_CLIENT_ID!,
         // clientSecret: process.env.KAKAO_CLIENT_SECRET!,
         callbackURL: `${app_location}/${process.env.KAKAO_CALLBACK_PATH!}`,
+        passReqToCallback: true,
       },
-      async function (accessToken, refreshToken, profile, cb) {
-        const user = await bringUser(profile, OAuthEnum.KAKAO)
-        cb(null, user)
+      async function (req, accessToken, refreshToken, profile, done) {
+        let user = await UserService.findOneBySocialId(profile.id)
+        let isNewUser = false
+        const originUrl = req.session.originUrl
+        const profileUrl = req.session.profileUrl
+        if (!user) {
+          isNewUser = true
+          user = await bringUser(profile, OAuthEnum.KAKAO)
+        }
+
+        await req.session.save(async (err) => {
+          req.session.isNewUser = isNewUser
+          req.session.originUrl = originUrl
+          req.session.profileUrl = profileUrl
+        })
+
+        done(null, user)
       },
     ),
   )
@@ -73,10 +88,24 @@ export const setOauthStrategies = (_app: Express) => {
         clientID: process.env.GOOGLE_CLIENT_ID!,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
         callbackURL: `${app_location}/${process.env.GOOGLE_CALLBACK_PATH!}`,
+        passReqToCallback: true,
       },
-      async function (accessToken, refreshToken, profile, cb) {
-        const user = await bringUser(profile, OAuthEnum.GOOGLE)
-        cb(null, user)
+      async function (req, accessToken, refreshToken, profile, done) {
+        let user = await UserService.findOneBySocialId(profile.id)
+        let isNewUser = false
+        const originUrl = req.session.originUrl
+        const profileUrl = req.session.profileUrl
+        if (!user) {
+          isNewUser = true
+          user = await bringUser(profile, OAuthEnum.GOOGLE)
+        }
+
+        await req.session.save(async (err) => {
+          req.session.isNewUser = isNewUser
+          req.session.originUrl = originUrl
+          req.session.profileUrl = profileUrl
+        })
+        done(null, user, { hello: 'world' })
       },
     ),
   )

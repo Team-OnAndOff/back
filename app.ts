@@ -55,8 +55,8 @@ app.use(
     store: new (FileStore(session))({
       path: path.join(__dirname, 'sessions'),
     }),
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     cookie: { maxAge: checkPeriod },
     name: 'SESSIONID',
   }),
