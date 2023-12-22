@@ -29,6 +29,9 @@ const socialValidator = {
       social: z.nativeEnum(OAuthEnum),
     })
     .strict(),
+  query: z.object({
+    originUrl: z.string().optional(),
+  }),
 }
 const socialCallbackValidator = {
   params: z
@@ -43,6 +46,9 @@ router.get(
   validateRequest(socialValidator),
   (req, res, next) => {
     logger.info('social Login!', req.user)
+    req.session.originUrl = req.query.originUrl
+    req.session.save()
+
     const socialName = req.params.social
     let nextMiddleware = null
     if (socialName === OAuthEnum.GOOGLE) {
@@ -64,9 +70,11 @@ router.get(
   '/login/:social/callback',
   validateRequest(socialCallbackValidator),
   (req, res, next) => {
-    console.log(req.user)
     logger.info('callback으로 돌아옴!')
-    passport.authenticate(req.params.social)(req, res, next)
+    passport.authenticate(req.params.social, {
+      successRedirect: req.session.originUrl,
+    })(req, res, next)
+    console.log('callback route2', req.sessionID, req.session)
   },
   AuthController.getLoginCallback,
 )

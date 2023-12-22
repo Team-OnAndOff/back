@@ -1,6 +1,8 @@
-@ENDPOINT = http://localhost:3000/api
-@USERID = 7
-@LOGIN_COOKIE = SESSIONID=s%3AxOX27dOUaco6bekOXlWsWazOiS1QSv5s.%2FiFwtO4rncIAlALDbCVC3J%2BS2Pr9oIGxLrw%2BTNGTfYw
+@ENDPOINT = http://localhost:4000/api
+@USERID = 1
+@LOGIN_COOKIE = SESSIONID=s%3Aj63l9YoilA9wQpRC46690eHZk1kfwUET.91us00ztdoXYqhWXYIfc9qGM%2BFrB2vpmpUfn3cZuMWY
+
+
 ###
 GET {{ENDPOINT}}/users/{{USERID}}/info
 Cookie: {{LOGIN_COOKIE}}
@@ -17,15 +19,21 @@ GET {{ENDPOINT}}/auth/logout
 
 ###
 
-PUT {{ENDPOINT}}/users/7{{USERID}}
+PUT {{ENDPOINT}}/users/{{USERID}}
 Cookie: {{LOGIN_COOKIE}}
-content-type: application/json
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="aa.png"
+Content-Type: image/png
 
-{
-    "username": "누구?",
-    "introduction": "11",
-    "email": "abb1aaab@gmail.com"
-}
+< D:/aa.png
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="username"
+Content-Type: text
+
+aasd
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+
 
 ###
 
@@ -59,13 +67,13 @@ content-type: application/json
 
 ###
 
-GET {{ENDPOINT}}/users/7/assess
+GET {{ENDPOINT}}/users/1/assess
 Cookie: {{LOGIN_COOKIE}}
 content-type: application/json
 
 ###
 
-GET {{ENDPOINT}}/users/6/my-assess
+GET {{ENDPOINT}}/users/1/my-assess
 Cookie: {{LOGIN_COOKIE}}
 content-type: application/json
 

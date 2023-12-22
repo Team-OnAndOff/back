@@ -60,9 +60,9 @@ export class EventBodyDTO {
   readonly subCategoryId: number
 
   @IsArray()
-  @IsOptional()
+  @IsNotEmpty()
   @IsDefined()
-  readonly careerCategoryIds?: number[]
+  readonly careerCategoryIds!: number[]
 
   @IsOptional()
   @IsArray()

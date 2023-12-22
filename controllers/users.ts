@@ -12,6 +12,7 @@ import { Request, Response, NextFunction } from 'express'
 import { ApiError } from '../utils/error'
 import { User } from '../models/typeorm/entity/User'
 import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
+import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
 // import { IUserRequest } from '../config/passport'
 
 export default class UserController {
@@ -32,6 +33,7 @@ export default class UserController {
           username: user.username,
           email: user.email,
           introduction: user.introduction,
+          image: user.image,
         }),
       )
     } else if (req.params.type === 'detail') {
@@ -54,7 +56,7 @@ export default class UserController {
     }
   })
   static updateUser = catchAsync(async (req, res, next) => {
-    const dto = new UpdateUserDTO(req.params.user_id, req.body)
+    const dto = new UpdateUserDTO(req.params.user_id, req.body, req.file)
     console.log('-->', dto)
     const result = await userService.updateUser(dto)
     res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', result))

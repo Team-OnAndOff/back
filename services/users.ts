@@ -15,6 +15,11 @@ import {
 } from '../models/typeorm/dto/UserDTO'
 import { UserAssess } from '../models/typeorm/entity/UserAssess'
 import { Event } from '../models/typeorm/entity/Event'
+import { s3Delete, s3Upload } from '../utils/s3'
+import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
+import { logger } from '../config/logger'
+import { Image } from '../models/typeorm/entity/Image'
+import { Multer } from 'multer'
 
 class UserService {
   private repo
@@ -27,7 +32,10 @@ class UserService {
     this.eventRepo = AppDataSource.getRepository(Event)
   }
   async findOneById(userId: number): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { id: userId } })
+    const user = await this.repo.findOne({
+      where: { id: userId },
+      relations: ['image'],
+    })
     return user
   }
   async findOneBySocialId(socialId: string): Promise<User | null> {
@@ -39,9 +47,49 @@ class UserService {
     return user
   }
   async updateUser(dto: UpdateUserDTO) {
-    const result = await this.repo.update({ id: dto.id }, { ...dto })
-    const user = await this.findOneById(dto.id)
-    return user
+    let upload: ImageDTO
+    return await AppDataSource.transaction(async (manager) => {
+      let { image, ...dtoExceptImage } = dto
+      const txUserRepo = manager.getRepository(User)
+      const target = await txUserRepo.findOne({
+        where: { id: dto.id },
+        relations: ['image'],
+      })
+      if (!target) {
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          '해당 아이디를 가진 유저가 존재하지 않습니다.',
+        )
+      }
+      await txUserRepo.update({ id: dto.id }, dtoExceptImage)
+      const txImageRepo = manager.getRepository(Image)
+
+      if (dto.image) {
+        const imageDto = new ImageDTO(dto.image)
+        const targetImage = new Image()
+        upload = await s3Upload(imageDto, 'users')
+        targetImage.filename = upload.filename
+        targetImage.size = upload.size
+        targetImage.uploadPath = upload.destination
+        const rImage = await txImageRepo.save(targetImage)
+        await txUserRepo.update({ id: dto.id }, { image: rImage })
+      }
+
+      const user = await txUserRepo.findOne({
+        where: { id: dto.id },
+        relations: ['image'],
+      })
+      return user
+    }).catch(async (err) => {
+      if (upload) {
+        try {
+          await s3Delete(upload.filename)
+        } catch (err) {
+          logger.error(`이미지 삭제 실패!! ${upload.filename}`, err)
+        }
+      }
+      throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err)
+    })
   }
   async createAssess(dto: PostAssessDTO) {
     const reporter = await this.findOneById(dto.reporterId)
@@ -109,7 +157,27 @@ class UserService {
     if (!user) {
       throw new ApiError(httpStatus.BAD_REQUEST, '')
     }
-    const result = await this.assessRepo.find({ where: { reporterId: user } })
+    const result = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.reporterId = :reporterId', { reporterId: user.id })
+      .leftJoinAndSelect('ua.reporterId', 'r')
+      .leftJoinAndSelect('r.image', 'rimage')
+      .leftJoinAndSelect('ua.attendeeId', 'a')
+      .leftJoinAndSelect('a.image', 'aimage')
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+        'r.id',
+        'r.username',
+        'rimage',
+        'a.id',
+        'a.username',
+        'aimage',
+      ])
+      .getMany()
     return result
   }
   async getAssessedList(userId: number) {
@@ -123,7 +191,28 @@ class UserService {
         '평가 대상자는 존재하지 않는 유저입니다.',
       )
     }
-    const result = await this.assessRepo.find({ where: { attendeeId: user } })
+    const result = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: user.id })
+      .leftJoinAndSelect('ua.reporterId', 'r')
+      .leftJoinAndSelect('r.image', 'rimage')
+      .leftJoinAndSelect('ua.attendeeId', 'a')
+      .leftJoinAndSelect('a.image', 'aimage')
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+        'r.id',
+        'r.username',
+        'rimage',
+        'a.id',
+        'a.username',
+        'aimage',
+      ])
+      .getMany()
+
     return result
   }
 }

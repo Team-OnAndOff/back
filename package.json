@@ -8,6 +8,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.474.0",
     "@aws-sdk/lib-storage": "^3.474.0",
+    "@types/connect-flash": "^0.0.40",
     "@types/cookie-parser": "^1.4.6",
     "@types/express-mysql-session": "^3.0.3",
     "@types/express-session": "^1.17.10",
@@ -21,6 +22,7 @@
     "@types/session-file-store": "^1.2.5",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
+    "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -50,6 +52,7 @@
     "swagger-ui-express": "^5.0.0",
     "ts-node": "^10.9.2",
     "typeorm": "^0.3.17",
+    "uuidv4": "^6.2.13",
     "winston": "^3.11.0",
     "yamljs": "^0.3.0",
     "zod": "^3.22.4",

@@ -31,9 +31,10 @@ export const AppDataSource = new DataSource({
   username: USERNAME,
   password: PASSWORD,
   database: DB_NAME,
-  //   synchronize: true,
+  // synchronize: true,
   logging: false,
   entities: ['models/typeorm/entity/*.ts'],
   migrations: [],
   subscribers: [],
+  charset: 'utf8mb4',
 })

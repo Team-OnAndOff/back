@@ -6,6 +6,7 @@ import FileStore from 'session-file-store'
 import swaggerUi from 'swagger-ui-express'
 import YAML from 'yamljs'
 import path from 'path'
+import flash from 'connect-flash'
 import { passport, setOauthStrategies } from './config/passport'
 
 import { apiRouter } from './routes/index'
@@ -25,6 +26,7 @@ import { ApiError } from './utils/error'
 import cors from 'cors'
 
 export const app = express()
+
 const swaggerSpec = YAML.load(path.join(__dirname, './swagger.yaml'))
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
@@ -65,6 +67,7 @@ app.use(passport.session())
 
 setOauthStrategies(app)
 
+app.use(flash())
 app.use('/api', apiRouter)
 
 app.use((req: Request, res: Response, next: NextFunction) => {

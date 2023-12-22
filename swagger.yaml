@@ -14,6 +14,8 @@ tags:
     description: 모임 API
   - name: reports-event
     description: 모임 신고 API
+  - name: reports-user
+    description: 유저 신고 API
   - name: careerCategories
     description: 직업 카테고리 API
   - name: categories
@@ -205,6 +207,24 @@ paths:
         - users
       summary: 유저평가
       description: 유저평가 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: number
+                  example: 1
+                attendeeId:
+                  type: number
+                  example: 1
+                score:
+                  type: number
+                  example: 1
+                description:
+                  type: string
+                  example: 너무 좋아요!!
       responses:
         '201':
           description: 성공
@@ -337,6 +357,7 @@ paths:
                 - image
                 - categoryId
                 - subCategoryId
+                - careerCategoryId
                 - title
                 - content
                 - recruitment
@@ -519,17 +540,6 @@ paths:
           required: true
           schema:
             type: number
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                userId:
-                  type: number
-                  example: 1
-                  description: 유저 Id
-        required: true
       responses:
         '200':
           description: 성공
@@ -590,9 +600,6 @@ paths:
                 answer:
                   type: string
                   example: 자기소개 입니다.
-                userId:
-                  type: number
-                  example: 1
       responses:
         '201':
           description: 성공
@@ -884,6 +891,69 @@ paths:
         '5xx':
           description: 서버 에러
 
+  /reports-user:
+    get:
+      tags:
+        - reports-user
+      summary: 유저 신고 목록
+      description: 유저 신고 목록을 가져오는 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    post:
+      tags:
+        - reports-user
+      summary: 유저 신고 등록
+      description: 유저 신고 등록하는 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                attendeeId:
+                  type: number
+                  example: 1
+                  description: 신고 유저 ID
+                description:
+                  type: string
+                  example: 이 모임을 신고합니다.
+                  description: 신고 내용
+        required: true
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-user/{reportId}:
+    get:
+      tags:
+        - reports-user
+      summary: 유저 신고 상세
+      description: 유저 신고 상세 정보를 가져오는 API
+      parameters:
+        - name: reportId
+          in: path
+          description: 신고 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
   /careerCategories:
     get:
       tags:
@@ -1039,6 +1109,9 @@ paths:
                 flag:
                   type: number
                   example: 0
+                description:
+                  type: string
+                  example: 💡같은 관심사를 가진 사람들과의 모임은 어떨까요?💡
       responses:
         '201':
           description: 성공
