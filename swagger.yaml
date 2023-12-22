@@ -207,6 +207,24 @@ paths:
         - users
       summary: 유저평가
       description: 유저평가 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: number
+                  example: 1
+                attendeeId:
+                  type: number
+                  example: 1
+                score:
+                  type: number
+                  example: 1
+                description:
+                  type: string
+                  example: 너무 좋아요!!
       responses:
         '201':
           description: 성공
