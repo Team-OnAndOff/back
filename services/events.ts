@@ -87,13 +87,6 @@ class EventService {
       })
     }
 
-    if (search) {
-      queryBuilder.andWhere(
-        '(event.title LIKE :search OR hashtag.hashTag LIKE :search)',
-        { search: `%${search}%` },
-      )
-    }
-
     if (limit) {
       queryBuilder.take(Number(limit))
     }
@@ -112,6 +105,14 @@ class EventService {
     }
 
     const events = await queryBuilder.getMany()
+    if (search) {
+      return events.filter(
+        (event) =>
+          event.hashTags.find((hashTag) => hashTag.hashtag === search) ||
+          event.title.includes(search),
+      )
+    }
+
     return events
   }
 
