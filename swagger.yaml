@@ -4,14 +4,969 @@ info:
   description: API 문서
   version: 1.0.0
 servers:
+  - url: http://kdt-sw-7-team05.elicecoding.com:5001/api
   - url: http://localhost:4000/api
 tags:
+  - name: auth
+    description: 인증 API
+  - name: users
+    description: 유저 API
+  - name: events
+    description: 모임 API
+  - name: reports-event
+    description: 모임 신고 API
+  - name: reports-user
+    description: 유저 신고 API
   - name: careerCategories
     description: 직업 카테고리 API
   - name: categories
     description: 카테고리 API
 
 paths:
+  /auth/login/{social}:
+    get:
+      tags:
+        - auth
+      summary: 소셜 로그인
+      description: 소셜 로그인 API
+      parameters:
+        - name: social
+          in: path
+          description: 소셜 ID(google, kakao, facebook, naver, github 중 1)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/login/{social}/callback:
+    get:
+      tags:
+        - auth
+      summary: 소셜 로그인(콜백)
+      description: 소셜 로그인(콜백) API
+      parameters:
+        - name: social
+          in: path
+          description: 소셜 ID(google, kakao, facebook, naver, github 중 1)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      summary: 로그아웃
+      description: 로그아웃 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /auth/withdraw:
+    get:
+      tags:
+        - auth
+      summary: 회원탈퇴
+      description: 회원탈퇴 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}/{type}:
+    get:
+      tags:
+        - users
+      summary: 유저정보
+      description: 유저 정보를 가져오는 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: true
+          schema:
+            type: string
+        - name: type
+          in: path
+          description: info(기본정보), detail(상세정보 로그인필요)
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}:
+    put:
+      tags:
+        - users
+      summary: 유저정보 수정
+      description: 유저정보 수정 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: 홍길동
+                  description: 유저 이름(닉네임)
+                introduction:
+                  type: number
+                  example: 안녕하세요 홍길동 입니다.
+                  description: 소개
+                image:
+                  type: file
+                  example: https://example.com/image/image.png
+                  description: 유저 이미지
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}/assess:
+    get:
+      tags:
+        - users
+      summary: 내가 평가한 사람 목록
+      description: 내가 평가한 사람 목록 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/{userId}/my-assess:
+    get:
+      tags:
+        - users
+      summary: 나를 평가한 사람 목록
+      description: 나를 평가한 사람 목록 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/assess:
+    post:
+      tags:
+        - users
+      summary: 유저평가
+      description: 유저평가 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventId:
+                  type: number
+                  example: 1
+                attendeeId:
+                  type: number
+                  example: 1
+                score:
+                  type: number
+                  example: 1
+                description:
+                  type: string
+                  example: 너무 좋아요!!
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /users/assess/{assessId}:
+    put:
+      tags:
+        - users
+      summary: 유저평가 수정
+      description: 유저평가 수정 API
+      parameters:
+        - name: assessId
+          in: path
+          description: 평가 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                score:
+                  type: number
+                  example: 1
+                description:
+                  type: string
+                  example: 너무 좋아요!!
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - users
+      summary: 유저평가 삭제
+      description: 유저평가 삭제 API
+      parameters:
+        - name: assessId
+          in: path
+          description: 평가 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events:
+    get:
+      tags:
+        - events
+      summary: 모임 목록
+      description: 모임 목록을 가져오는 API
+      parameters:
+        - name: categoryId
+          in: query
+          description: 카테고리 ID
+          required: false
+          schema:
+            type: string
+        - name: subCategoryId
+          in: query
+          description: 서브 카테고리 ID
+          required: false
+          schema:
+            type: string
+        - name: sort
+          in: query
+          description: 정렬 기준 (likes)
+          required: false
+          schema:
+            type: string
+        - name: order
+          in: query
+          description: 정렬 순서 (ASC, DESC)
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: 최대 개수
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: 검색내용
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: 현재페이지
+          required: false
+          schema:
+            type: string
+        - name: perPage
+          in: query
+          description: 한페이지에 보여줄 목록 개수
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+    post:
+      tags:
+        - events
+      summary: 모임 등록
+      description: 모임를 등록하는 API
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - userId
+                - image
+                - categoryId
+                - subCategoryId
+                - careerCategoryId
+                - title
+                - content
+                - recruitment
+                - online
+                - question
+                - challengeStartDate
+              properties:
+                userId:
+                  type: number
+                  example: 1
+                  description: 유저ID
+                categoryId:
+                  type: number
+                  example: 1
+                  description: 카테고리ID
+                subCategoryId:
+                  type: number
+                  example: 1
+                  description: 서브 카테고리ID
+                careerCategoryId:
+                  type: array
+                  items:
+                    type: number
+                  example: [1, 2, 3]
+                  description: 직업카테고리 ID 배열
+                hashTag:
+                  type: array
+                  items:
+                    type: string
+                  example: ['JS', 'TS', 'React']
+                  description: 해시태그 문자열 배열
+                image:
+                  type: file
+                  example: https://example.com/image/image.png
+                  description: 대표 이미지
+                title:
+                  type: string
+                  example: TS + React스터디 모집
+                  description: 모임 제목
+                content:
+                  type: string
+                  example: TS + React스터디 공부 같이 하실분~~
+                  description: 모임 내용
+                recruitment:
+                  type: number
+                  example: 20
+                  description: 모임 정원
+                question:
+                  type: string
+                  example: 간단한 자기소개해주세요.
+                  description: 모임에 대한 질문 내용
+                online:
+                  type: number
+                  example: 1
+                  description: 1 온라인, 0 오프라인
+                challengeStartDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 시작 날짜
+                challengeEndDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 종료 날짜
+                address:
+                  type: object
+                  properties:
+                    zipCode:
+                      type: number
+                      example: 11523
+                      description: 주소(우편번호)
+                    detail1:
+                      type: string
+                      example: 서울특별시 성동구 아차산로17길 48
+                      description: 주소(도로명)
+                    detail2:
+                      type: string
+                      example: 203호
+                      description: 주소(상세)
+                    latitude:
+                      type: number
+                      example: 11523
+                      description: 위도
+                    longitude:
+                      type: number
+                      example: 11523
+                      description: 경도
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}:
+    get:
+      tags:
+        - events
+      summary: 모임 상세
+      description: 모임 상세정보을 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    put:
+      tags:
+        - events
+      summary: 모임 수정
+      description: 모임 정보를 수정하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: 학생
+        required: true
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - events
+      summary: 모임 삭제
+      description: 모임 정보를 삭제하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/likes:
+    put:
+      tags:
+        - events
+      summary: 모임 좋아요
+      description: 모임 좋아요 정보를 수정/등록하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/applies:
+    get:
+      tags:
+        - events
+      summary: 모임에 참석, 신청 중인 유저 목록 조회
+      description: 모임에 참석, 신청 중인 유저 목록 조회를 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: 모임 상태 값
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event_Apply'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    post:
+      tags:
+        - events
+      summary: 모임 신청
+      description: 모임 신청을 등록하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answer:
+                  type: string
+                  example: 자기소개 입니다.
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/applies/{applyId}:
+    get:
+      tags:
+        - events
+      summary: 모임 신청 중인 유저 조회
+      description: 모임 신청 중인 유저 조회를 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: applyId
+          in: path
+          description: 모임유저 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event_Apply'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    delete:
+      tags:
+        - events
+      summary: 모임 유저 삭제
+      description: 모임 유저 정보를 삭제하는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: applyId
+          in: path
+          description: 모임유저 ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/applies/{applyId}/answer:
+    put:
+      tags:
+        - events
+      summary: 모임 유저 정보(질문에대한 답) 수정
+      description: 모임 유저 정보(질문에대한 답)을 수정 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: applyId
+          in: path
+          description: 모임유저 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                answer:
+                  type: string
+                  example: 자기소개 입니다.
+                userId:
+                  type: number
+                  example: 1
+                  description: 유저 ID
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/applies/{applyId}/flag:
+    put:
+      tags:
+        - events
+      summary: 모임 유저 정보(권한) 수정
+      description: 모임 유저 정보(권한)을 수정 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: applyId
+          in: path
+          description: 모임유저 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                flag:
+                  type: number
+                  example: 1
+                userId:
+                  type: number
+                  example: 1
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /events/{eventId}/applies/{applyId}/status:
+    put:
+      tags:
+        - events
+      summary: 모임 유저 정보(상태) 수정
+      description: 모임 유저 정보(상태)을 수정 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: string
+        - name: applyId
+          in: path
+          description: 모임유저 ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: number
+                  example: 1
+                userId:
+                  type: number
+                  example: 1
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-event:
+    get:
+      tags:
+        - reports-event
+      summary: 모임 신고 목록
+      description: 전체 모임 신고 목록을 가져오는 API
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event_Complaint'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    post:
+      tags:
+        - reports-event
+      summary: 모임 신고 등록
+      description: 모임 신고 등록하는 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reporterId:
+                  type: number
+                  example: 1
+                  description: 유저 ID
+                eventId:
+                  type: number
+                  example: 1
+                  description: 모임 ID
+                description:
+                  type: string
+                  example: 이 모임을 신고합니다.
+                  description: 신고 내용
+        required: true
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-event/{eventId}:
+    get:
+      tags:
+        - reports-event
+      summary: 특정 모임 신고 목록
+      description: 특정 모임 신고 목록정보을 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event_Complaint'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-event/{eventId}/{reportId}:
+    get:
+      tags:
+        - reports-event
+      summary: 특정 모임 신고 상세
+      description: 특정 모임 신고 상세정보을 가져오는 API
+      parameters:
+        - name: eventId
+          in: path
+          description: 모임 ID
+          required: true
+          schema:
+            type: number
+        - name: reportId
+          in: path
+          description: 신고 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event_Complaint'
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-user:
+    get:
+      tags:
+        - reports-user
+      summary: 유저 신고 목록
+      description: 유저 신고 목록을 가져오는 API
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+    post:
+      tags:
+        - reports-user
+      summary: 유저 신고 등록
+      description: 유저 신고 등록하는 API
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                attendeeId:
+                  type: number
+                  example: 1
+                  description: 신고 유저 ID
+                description:
+                  type: string
+                  example: 이 모임을 신고합니다.
+                  description: 신고 내용
+        required: true
+      responses:
+        '201':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
+  /reports-user/{reportId}:
+    get:
+      tags:
+        - reports-user
+      summary: 유저 신고 상세
+      description: 유저 신고 상세 정보를 가져오는 API
+      parameters:
+        - name: reportId
+          in: path
+          description: 신고 ID
+          required: true
+          schema:
+            type: number
+      responses:
+        '200':
+          description: 성공
+        '4xx':
+          description: 잘못된 요청
+        '5xx':
+          description: 서버 에러
+
   /careerCategories:
     get:
       tags:
@@ -167,6 +1122,9 @@ paths:
                 flag:
                   type: number
                   example: 0
+                description:
+                  type: string
+                  example: 💡같은 관심사를 가진 사람들과의 모임은 어떨까요?💡
       responses:
         '201':
           description: 성공
@@ -306,7 +1264,7 @@ paths:
           description: 잘못된 요청
         '5xx':
           description: 서버 에러
-  
+
   /categories/{categoryId}/subCategories/{subCategoryId}:
     get:
       tags:
@@ -400,34 +1358,220 @@ paths:
         '5xx':
           description: 서버 에러
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 components:
   schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        image:
+          $ref: '#/components/schemas/Image'
+        socialId:
+          type: string
+          example: 13251342
+          description: 소셜 ID
+        provider:
+          type: string
+          example: 카카오
+          description: 소셜 로그인 제공자
+        username:
+          type: string
+          example: 홍길동
+          description: 이름(닉네임)
+        email:
+          type: string
+          example: google@google.com
+          description: 이메일
+        introduction:
+          type: string
+          example: 안녕하세요. 홍길동입니다.
+          description: 한줄 소개
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        image:
+          $ref: '#/components/schemas/Image'
+        category:
+          $ref: '#/components/schemas/SubCategory'
+        careerCategory:
+          type: array
+          items:
+            $ref: '#/components/schemas/CareerCategory'
+        title:
+          type: string
+          example: TS + React스터디 모집
+          description: 모임 제목
+        content:
+          type: string
+          example: TS + React스터디 공부 같이 하실분~~
+          description: 모임 내용
+        recruitment:
+          type: number
+          example: 20
+          description: 모임 정원
+        question:
+          type: string
+          example: 간단한 자기소개해주세요.
+          description: 모임에 대한 질문 내용
+        online:
+          type: number
+          example: 1
+          description: 0 오프라인, 1 온라인
+        challengeStartDate:
+          type: string
+          example: 2023-12-01
+          description: 모임 시작 날짜
+        challengeEndDate:
+          type: string
+          example: 2023-12-01
+          description: 모임 종료 날짜
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
+    Event_Complaint:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        eventId:
+          type: number
+          example: 1
+          description: 모임 ID
+        reporterId:
+          type: number
+          example: 1
+          description: 유저 ID
+        description:
+          type: string
+          example: 이 모임을 신고합니다.
+          description: 신고내용
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
+    Event_Apply:
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        eventId:
+          type: number
+          example: 1
+          description: 모임 ID
+        userId:
+          type: number
+          example: 1
+          description: 유저 ID
+        answer:
+          type: string
+          example: 자기소개 입니다.
+          description: 모임 질문에 대한 대답
+        flag:
+          type: number
+          example: 0
+          description: 0 팀원, 1 팀장
+        appliedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 신청일시
+        approvedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 승인(거절, 취소) 일시
+        status:
+          type: number
+          example: 0
+          description: 0 신청, 1 거절, 2 취소, 3 승인,  4 탈퇴, 5 추방 (default 0)
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
+    Image:
+      required:
+        - id
+        - uploadPath
+        - createdAt
+        - updatedAt
+      type: object
+      properties:
+        id:
+          type: number
+          example: 1
+          description: Primary Key
+        fileName:
+          type: string
+          example: 파일이름.png
+          description: 업로드된 파일이름
+        uploadPath:
+          type: string
+          example: https://www.s3.example/...
+          description: 파일이 저장된 경로
+        size:
+          type: number
+          example: 5827365
+          description: 파일크기
+        createdAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 등록날짜
+        updatedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 수정날짜
+        deletedAt:
+          type: string
+          example: 2023-12-01T17:32:28Z
+          description: 삭제날짜
+
     CareerCategory:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key
@@ -447,47 +1591,16 @@ components:
           type: string
           example: 2023-12-01T17:32:28Z
           description: 삭제날짜
-
-
-    CareerCategory:
-      required:
-        - _id
-        - name
-        - createdAt
-        - updatedAt
-      type: object
-      properties:
-        _id:
-          type: number
-          example: 1
-          description: Primary Key
-        name:
-          type: string
-          example: 학생
-          description: 직업 카테고리 이름
-        createdAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 등록날짜
-        updatedAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 수정날짜
-        deletedAt:
-          type: string
-          example: 2023-12-01T17:32:28Z
-          description: 삭제날짜
-
 
     Category:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key
@@ -519,13 +1632,13 @@ components:
 
     SubCategory:
       required:
-        - _id
+        - id
         - name
         - createdAt
         - updatedAt
       type: object
       properties:
-        _id:
+        id:
           type: number
           example: 1
           description: Primary Key

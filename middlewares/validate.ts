@@ -1,10 +1,11 @@
 import { ClassConstructor } from 'class-transformer'
 import { validateOrReject } from 'class-validator'
 import { catchAsync } from '../utils/catchAsync'
+import { RequestPart } from '../types'
 
 export default function validateMiddleware<T extends object>(
   dto: ClassConstructor<T>,
-  name: 'body' | 'params' | 'query' = 'body',
+  name: RequestPart = 'body',
 ) {
   return catchAsync(async (req, res, next) => {
     try {

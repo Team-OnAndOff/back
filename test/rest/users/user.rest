@@ -1,0 +1,80 @@
+@ENDPOINT = http://localhost:4000/api
+@USERID = 1
+@LOGIN_COOKIE = SESSIONID=s%3Aj63l9YoilA9wQpRC46690eHZk1kfwUET.91us00ztdoXYqhWXYIfc9qGM%2BFrB2vpmpUfn3cZuMWY
+
+
+###
+GET {{ENDPOINT}}/users/{{USERID}}/info
+Cookie: {{LOGIN_COOKIE}}
+
+###
+GET {{ENDPOINT}}/users/{{USERID}}/detail
+Cookie: {{LOGIN_COOKIE}}
+
+
+###
+
+GET {{ENDPOINT}}/auth/logout
+
+
+###
+
+PUT {{ENDPOINT}}/users/{{USERID}}
+Cookie: {{LOGIN_COOKIE}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="aa.png"
+Content-Type: image/png
+
+< D:/aa.png
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="username"
+Content-Type: text
+
+aasd
+----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+
+###
+
+POST {{ENDPOINT}}/users/assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+{
+    "eventId": 1,
+    "attendeeId": 6,
+    "score": 3,
+    "description": "abb1aaab gmail qqq"
+}
+
+###
+
+PUT {{ENDPOINT}}/users/assess/7
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+{
+    "score": 2,
+    "description": "1행복하신 분이시네요."
+}
+
+###
+
+DELETE {{ENDPOINT}}/users/assess/4
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+###
+
+GET {{ENDPOINT}}/users/1/assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+###
+
+GET {{ENDPOINT}}/users/1/my-assess
+Cookie: {{LOGIN_COOKIE}}
+content-type: application/json
+
+

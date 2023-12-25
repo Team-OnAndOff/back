@@ -1,6 +1,7 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm'
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm'
 import { Category } from './Category'
 import { BaseAutoIdEntity } from './BaseAutoIdEntity'
+import { Event } from './Event'
 
 @Entity({ name: 'SUB_CATEGORY' })
 export class SubCategory extends BaseAutoIdEntity {
@@ -14,4 +15,7 @@ export class SubCategory extends BaseAutoIdEntity {
   })
   @JoinColumn({ name: 'parentId' })
   parentId?: Category
+
+  @OneToMany(() => Event, (event) => event.id)
+  events!: Event[]
 }

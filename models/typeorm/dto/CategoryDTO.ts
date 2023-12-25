@@ -9,6 +9,7 @@ import {
 export interface CategoryRequestBody {
   name: string
   flag: number
+  description: string
 }
 
 export interface CategoryRequestParams {
@@ -25,9 +26,14 @@ export class CategoryBodyDTO {
   @IsNumber()
   flag: number
 
+  @IsNotEmpty()
+  @IsString()
+  description: string
+
   constructor(body: CategoryRequestBody) {
     this.name = body.name
     this.flag = body.flag
+    this.description = body.description
   }
 }
 
