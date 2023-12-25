@@ -136,9 +136,9 @@ class EventService {
     return event
   }
 
-  async createEvent(body: EventBodyDTO, file: ImageDTO) {
+  async createEvent(body: EventBodyDTO, file: ImageDTO, userId: number) {
     const currentDate = new Date()
-    const user = await UserService.findOneById(body.userId)
+    const user = await UserService.findOneById(userId)
     const category = await CategoryService.getSubCategoryById(
       body.categoryId,
       body.subCategoryId,
@@ -224,7 +224,7 @@ class EventService {
     }
   }
 
-  async updateEventById(eventId: number, body: EventBodyDTO) {
+  async updateEventById(eventId: number, body: EventBodyDTO, userId: number) {
     const response = await this.eventRepo.update({ id: eventId }, body)
 
     if (response.affected === 0) {

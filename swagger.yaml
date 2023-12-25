@@ -366,7 +366,6 @@ paths:
             schema:
               type: object
               required:
-                - userId
                 - image
                 - categoryId
                 - subCategoryId
@@ -378,10 +377,6 @@ paths:
                 - question
                 - challengeStartDate
               properties:
-                userId:
-                  type: number
-                  example: 1
-                  description: 유저ID
                 categoryId:
                   type: number
                   example: 1
