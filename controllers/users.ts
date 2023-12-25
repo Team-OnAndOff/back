@@ -101,4 +101,14 @@ export default class UserController {
         .json(new ResponseDTO(httpStatus.OK, '삭제성공', result))
     },
   )
+  static getUserAppliedEvents = catchAsync(
+    async (req: Request & { user?: any }, res, next) => {
+      const userId = Number(req.params.user_id)
+      console.log('--->', userId)
+      const result = await userService.getUserAppliedEvents(userId)
+      res
+        .status(httpStatus.OK)
+        .json(new ResponseDTO(httpStatus.OK, '등록된 모임목록', result))
+    },
+  )
 }
