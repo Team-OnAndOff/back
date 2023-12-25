@@ -11,7 +11,7 @@ export class EventLike extends BaseAutoIdEntity {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'eventId' })
-  eventId!: Event
+  event!: Event
 
   @ManyToOne(() => User, (user) => user.id, {
     nullable: false,
@@ -19,7 +19,7 @@ export class EventLike extends BaseAutoIdEntity {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  userId!: User
+  user!: User
 
   @Column({ type: 'datetime', nullable: true })
   liked?: Date

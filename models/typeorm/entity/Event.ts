@@ -5,53 +5,41 @@ import {
   JoinColumn,
   OneToOne,
   OneToMany,
+  ManyToMany,
+  JoinTable,
 } from 'typeorm'
 import { User } from './User'
 import { SubCategory } from './SubCategory'
 import { Image } from './Image'
-import { CareerCategory } from './CareerCategory'
 import { EventAddress } from './EventAddress'
 import { BaseAutoIdEntity } from './BaseAutoIdEntity'
 import { UserAssess } from './UserAssess'
 import { EventApply } from './EventApply'
 import { EventHashTag } from './EventHashTag'
 import { EventComplaint } from './EventComplaint'
-import { EventCareerCategory } from './EventCareerCategory'
 import { EventLike } from './EventLike'
+import { CareerCategory } from './CareerCategory'
 
 @Entity({ name: 'EVENT' })
 export class Event extends BaseAutoIdEntity {
-  @ManyToOne(() => User, (user) => user.id, {
-    nullable: false,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
-  @JoinColumn({ name: 'userId' })
-  userId!: User
-
-  @OneToOne(() => SubCategory, {
-    nullable: false,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(() => User, (user) => user.id, { nullable: false, cascade: true })
   @JoinColumn()
-  categoryId!: SubCategory
+  user!: User
 
-  @OneToOne(() => Image, {
-    nullable: true,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
-  })
+  @ManyToOne(() => SubCategory, (category) => category.id, { nullable: false })
+  @JoinColumn()
+  category!: SubCategory
+
+  @OneToOne(() => Image, (image) => image.id, { nullable: true, cascade: true })
   @JoinColumn()
   image!: Image
 
-  @OneToOne(() => EventAddress, {
+  @OneToOne(() => EventAddress, (address) => address.id, {
     nullable: true,
-    onDelete: 'CASCADE',
-    onUpdate: 'CASCADE',
+    cascade: true,
   })
-  @JoinColumn({ name: 'addressId' })
-  address?: EventAddress
+  @JoinColumn()
+  address!: EventAddress
 
   @Column({ type: 'varchar', length: 255 })
   title!: string
@@ -68,28 +56,28 @@ export class Event extends BaseAutoIdEntity {
   @Column({ type: 'tinyint' })
   online!: number
 
-  @Column({ type: 'date', nullable: true })
-  challengeStartDate?: Date
+  @Column({ type: 'date' })
+  challengeStartDate!: Date
 
   @Column({ type: 'date', nullable: true })
   challengeEndDate?: Date
 
-  @OneToMany(() => UserAssess, (assess) => assess.eventId, {
-    nullable: true,
-  })
+  @OneToMany(() => UserAssess, (assess) => assess.eventId, { nullable: true })
   userAssess?: UserAssess[]
 
-  @OneToMany(() => EventApply, (apply) => apply.eventId, {
+  @OneToMany(() => EventApply, (apply) => apply.event, {
     nullable: true,
+    cascade: true,
   })
   eventApplies?: EventApply[]
 
   @OneToMany(() => EventHashTag, (hashTag) => hashTag.eventId, {
     nullable: true,
+    cascade: true,
   })
-  hashTags?: EventHashTag[]
+  hashTags!: EventHashTag[]
 
-  @OneToMany(() => EventComplaint, (eventComplaint) => eventComplaint.eventId, {
+  @OneToMany(() => EventComplaint, (eventComplaint) => eventComplaint.event, {
     nullable: true,
   })
   eventComplaints?: EventComplaint[]
@@ -99,19 +87,15 @@ export class Event extends BaseAutoIdEntity {
   })
   reporters?: User[]
 
-  @OneToMany(
-    () => EventCareerCategory,
-    (careerCategory) => careerCategory.eventId,
-    {
-      nullable: true,
-    },
-  )
-  careerCategories?: EventCareerCategory[]
-
-  @OneToMany(() => EventLike, (like) => like.eventId, {
-    nullable: true,
+  @ManyToMany(() => CareerCategory, (category) => category.id, {
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
   })
+  @JoinTable({
+    name: 'EVENT_CAREER_CATEGORY',
+  })
+  careerCategories!: CareerCategory[]
+
+  @OneToMany(() => EventLike, (like) => like.event, { nullable: true })
   likes?: EventLike[]
 }

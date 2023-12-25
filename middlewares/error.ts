@@ -56,9 +56,9 @@ export const errorHandler = (
     message,
     ...(MODE === 'DEV' && { stack: err.stack }),
   }
-
+  console.log('11')
   if (MODE === 'DEV') {
-    logger.error(err)
+    logger.error(err.stack)
   }
 
   res.status(statusCode).send(response)

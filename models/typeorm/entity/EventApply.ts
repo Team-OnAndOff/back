@@ -11,7 +11,7 @@ export class EventApply extends BaseAutoIdEntity {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'userId' })
-  userId!: User
+  user!: User
 
   @ManyToOne(() => Event, (event) => event.id, {
     nullable: false,
@@ -19,7 +19,7 @@ export class EventApply extends BaseAutoIdEntity {
     onUpdate: 'CASCADE',
   })
   @JoinColumn({ name: 'eventId' })
-  eventId!: Event
+  event!: Event
 
   @Column({ type: 'text' })
   answer!: string

@@ -42,10 +42,10 @@ export class User extends BaseAutoIdEntity {
   @JoinColumn()
   careerCategory?: CareerCategory
 
-  @OneToMany(() => Event, (event) => event.userId)
+  @OneToMany(() => Event, (event) => event.user)
   events!: Event[]
 
-  @OneToMany(() => EventLike, (event) => event.userId, {
+  @OneToMany(() => EventLike, (event) => event.user, {
     nullable: true,
     onDelete: 'CASCADE',
     onUpdate: 'CASCADE',
@@ -62,7 +62,7 @@ export class User extends BaseAutoIdEntity {
   })
   attendeeAssess?: UserAssess[]
 
-  @OneToMany(() => EventApply, (apply) => apply.userId, {
+  @OneToMany(() => EventApply, (apply) => apply.user, {
     nullable: true,
   })
   eventApplies?: EventApply[]
@@ -77,7 +77,7 @@ export class User extends BaseAutoIdEntity {
   })
   reportedComplaints?: UserComplaint[]
 
-  @OneToMany(() => EventComplaint, (complaint) => complaint.reporterId, {
+  @OneToMany(() => EventComplaint, (complaint) => complaint.user, {
     nullable: true,
   })
   eventComplaints?: EventComplaint[]

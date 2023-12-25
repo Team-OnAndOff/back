@@ -2,8 +2,8 @@ import { Router } from 'express'
 import validate from '../../middlewares/validate'
 import CareerCategoryController from '../../controllers/careerCategories'
 import {
-  CareerCategoryBodyDTO,
-  CareerCategoryParamsDTO,
+  CareerCategoryBodyDTO as BodyDTO,
+  CareerCategoryParamsDTO as ParamsDTO,
 } from '../../models/typeorm/dto/CareerCategoryDTO'
 
 const router = Router()
@@ -12,26 +12,26 @@ router.get('/', CareerCategoryController.getCareerCategories)
 
 router.get(
   '/:id',
-  validate(CareerCategoryParamsDTO, 'params'),
+  validate(ParamsDTO, 'params'),
   CareerCategoryController.getCareerCategory,
 )
 
 router.post(
   '/',
-  validate(CareerCategoryBodyDTO),
+  validate(BodyDTO),
   CareerCategoryController.createCareerCategory,
 )
 
 router.put(
   '/:id',
-  validate(CareerCategoryParamsDTO, 'params'),
-  validate(CareerCategoryBodyDTO),
+  validate(ParamsDTO, 'params'),
+  validate(BodyDTO),
   CareerCategoryController.updateCareerCategory,
 )
 
 router.delete(
   '/:id',
-  validate(CareerCategoryParamsDTO, 'params'),
+  validate(ParamsDTO, 'params'),
   CareerCategoryController.deleteCareerCategory,
 )
 

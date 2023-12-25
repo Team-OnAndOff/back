@@ -20,6 +20,7 @@ export enum OAuthEnum {
   KAKAO = 'kakao',
   FACEBOOK = 'facebook',
   NAVER = 'naver',
+  GITHUB = 'github',
 }
 
 const socialValidator = {
@@ -28,6 +29,11 @@ const socialValidator = {
       social: z.nativeEnum(OAuthEnum),
     })
     .strict(),
+  query: z.object({
+    host: z.string().optional(),
+    redirectPath: z.string().optional(),
+    profilePath: z.string().optional(),
+  }),
 }
 const socialCallbackValidator = {
   params: z
@@ -42,12 +48,20 @@ router.get(
   validateRequest(socialValidator),
   (req, res, next) => {
     logger.info('social Login!', req.user)
+    req.session.originUrl = `${req.query.host}${req.query.redirectPath}`
+    req.session.profileUrl = `${req.query.host}${req.query.profilePath}`
+    console.log(req.sessionID, req.session)
+
     const socialName = req.params.social
     let nextMiddleware = null
     if (socialName === OAuthEnum.GOOGLE) {
       nextMiddleware = passport.authenticate(socialName, {
         scope: ['profile'],
         prompt: 'select_account',
+      })
+    } else if (socialName === OAuthEnum.GITHUB) {
+      nextMiddleware = passport.authenticate(socialName, {
+        prompt: 'login',
       })
     } else {
       nextMiddleware = passport.authenticate(socialName)
@@ -58,10 +72,22 @@ router.get(
 router.get(
   '/login/:social/callback',
   validateRequest(socialCallbackValidator),
+
   (req, res, next) => {
-    console.log(req.user)
     logger.info('callback으로 돌아옴!')
-    passport.authenticate(req.params.social)(req, res, next)
+    passport.authenticate(req.params.social, {
+      // successRedirect: req.session.originUrl,
+    })(req, res, next)
+  },
+  (req, res, next) => {
+    const reqUser: any = req.user
+    if (req.session.originUrl) {
+      if (req.session.isNewUser) {
+        res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
+      }
+      res.redirect(req.session.originUrl || '')
+    }
+    next()
   },
   AuthController.getLoginCallback,
 )

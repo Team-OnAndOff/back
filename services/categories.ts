@@ -3,10 +3,7 @@ import { Repository } from 'typeorm'
 import { AppDataSource } from '../models/typeorm/data-source'
 import { Category } from '../models/typeorm/entity/Category'
 import { SubCategory } from '../models/typeorm/entity/SubCategory'
-import {
-  CategoryBodyDTO,
-  CategoryParamsDTO,
-} from '../models/typeorm/dto/CategoryDTO'
+import { CategoryBodyDTO } from '../models/typeorm/dto/CategoryDTO'
 import { ApiError } from '../utils/error'
 
 class CategoryService {
@@ -27,8 +24,7 @@ class CategoryService {
     return categories
   }
 
-  async getCategory(params: CategoryParamsDTO) {
-    const { categoryId } = params
+  async getCategoryByCategoryId(categoryId: number) {
     const category = await this.categoryRepo
       .createQueryBuilder('category')
       .leftJoinAndSelect('category.subCategories', 'subCategory')
@@ -50,8 +46,7 @@ class CategoryService {
     return category
   }
 
-  async updateCategory(params: CategoryParamsDTO, body: CategoryBodyDTO) {
-    const { categoryId } = params
+  async updateCategoryByCategoryId(categoryId: number, body: CategoryBodyDTO) {
     const response = await this.categoryRepo.update({ id: categoryId }, body)
 
     if (response.affected === 0) {
@@ -61,11 +56,10 @@ class CategoryService {
       )
     }
 
-    return await this.getCategory(params)
+    return await this.getCategoryByCategoryId(categoryId)
   }
 
-  async deleteCategory(params: CategoryParamsDTO) {
-    const { categoryId } = params
+  async deleteCategoryByCategoryId(categoryId: number) {
     const response = await this.categoryRepo.delete(categoryId)
 
     if (response.affected === 0) {
@@ -78,8 +72,7 @@ class CategoryService {
     return response
   }
 
-  async getSubCategoriesByCategoryId(params: CategoryParamsDTO) {
-    const { categoryId } = params
+  async getSubCategoriesByCategoryId(categoryId: number) {
     const subCategories = await this.subCategoryRepo
       .createQueryBuilder('subCategory')
       .where('subCategory.parentId = :categoryId', { categoryId })
@@ -88,8 +81,11 @@ class CategoryService {
     return subCategories
   }
 
-  async createSubCategory(params: CategoryParamsDTO, body: CategoryBodyDTO) {
-    const category = await this.getCategory(params)
+  async createSubCategoryByCategoryId(
+    categoryId: number,
+    body: CategoryBodyDTO,
+  ) {
+    const category = await this.getCategoryByCategoryId(categoryId)
     const { parentId, ...subCategory } = await this.subCategoryRepo.save({
       ...body,
       parentId: category,
@@ -98,9 +94,8 @@ class CategoryService {
     return subCategory
   }
 
-  async getSubCategory(params: CategoryParamsDTO) {
-    const { subCategoryId } = params
-    const category = await this.getCategory(params)
+  async getSubCategoryById(categoryId: number, subCategoryId: number) {
+    const category = await this.getCategoryByCategoryId(categoryId)
     const subCategory = await this.subCategoryRepo.findOne({
       where: { id: subCategoryId, parentId: category },
     })
@@ -115,8 +110,11 @@ class CategoryService {
     return subCategory
   }
 
-  async updateSubCategory(params: CategoryParamsDTO, body: CategoryBodyDTO) {
-    const { subCategoryId } = params
+  async updateSubCategoryById(
+    categoryId: number,
+    subCategoryId: number,
+    body: CategoryBodyDTO,
+  ) {
     const response = await this.subCategoryRepo.update(
       { id: subCategoryId },
       body,
@@ -129,12 +127,10 @@ class CategoryService {
       )
     }
 
-    return await this.getSubCategory(params)
+    return await this.getSubCategoryById(categoryId, subCategoryId)
   }
 
-  async deleteSubCategory(params: CategoryParamsDTO) {
-    const { subCategoryId } = params
-
+  async deleteSubCategoryById(subCategoryId: number) {
     const response = await this.subCategoryRepo.delete(subCategoryId)
     if (response.affected === 0) {
       throw new ApiError(
