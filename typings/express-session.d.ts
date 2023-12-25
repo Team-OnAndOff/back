@@ -4,5 +4,6 @@ declare module 'express-session' {
     originUrl: string
     profileUrl: string
     isNewUser: boolean
+    passport: any
   }
 }

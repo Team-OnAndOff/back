@@ -20,16 +20,19 @@ import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
 import { logger } from '../config/logger'
 import { Image } from '../models/typeorm/entity/Image'
 import { Multer } from 'multer'
+import { EventApply } from '../models/typeorm/entity/EventApply'
 
 class UserService {
   private repo
   private assessRepo
   private eventRepo
-
+  private eventApplyRepo
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
     this.eventRepo = AppDataSource.getRepository(Event)
+    this.eventRepo = AppDataSource.getRepository(Event)
+    this.eventApplyRepo = AppDataSource.getRepository(EventApply)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -213,6 +216,28 @@ class UserService {
       ])
       .getMany()
 
+    return result
+  }
+  async getUserAppliedEvents(userId: number) {
+    // const target = await this.assessRepo.findOne({
+    //   where: { id: aid },
+    // })
+    const user = await this.repo.findOne({ where: { id: userId } })
+    if (!user) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        '평가 대상자는 존재하지 않는 유저입니다.',
+      )
+    }
+    console.log(user)
+    const result = await this.eventApplyRepo
+      .createQueryBuilder('ea')
+      .andWhere('ea.userId = :userId', { userId })
+      .andWhere('ea.status = :status', { status: 3 })
+      .leftJoinAndSelect('ea.event', 'ev')
+      .leftJoinAndSelect('ev.image', 'img')
+      .select(['ea.id', 'ev.id', 'ev.title', 'img.uploadPath'])
+      .getMany()
     return result
   }
 }

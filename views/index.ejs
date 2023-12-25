@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h3>채팅방 : <span class="room"></span></h3>
+    <h4>유저 : <span class="user"></span></h4>
+    <ul class="event-list">
+      <li><button class="enter" value="11232">입장</button>11232</li>
+      <li><button class="enter" value="13232">입장</button>13232</li>
+      <li><button class="enter" value="11421232">입장</button>11421232</li>
+    </ul>
+
+    <div class="input-box">
+      <input type="text" class="input-box" /> <button class="send">전송</button
+      ><button class="receive">이전 내용</button>
+    </div>
+    <div>
+      <ul class="chat-message-box">
+        <li>[ <span>나</span> ] : <span>내용</span><br /><span>날짜</span></li>
+      </ul>
+    </div>
+    <script type="module">
+      import { io } from 'https://cdn.socket.io/4.7.2/socket.io.esm.min.js'
+
+      let messageBox = []
+      let roomId = 0
+      const socket = io('http://localhost:4000')
+      socket.on('first', (data) => {
+        console.log('@@', data)
+      })
+
+      socket.on('entered', (data) => {
+        console.log('@@', data)
+        const { roomId, messages } = data
+        const roomTag = document.querySelector('span.room')
+        roomTag.innerHTML = `[ ${roomId} ]`
+
+        const chatBox = document.querySelector('ul.chat-message-box')
+        chatBox.innerHTML = ''
+        messageBox = []
+        messageBox.push(...data.messages)
+
+        messageBox.forEach((m) => {
+          const li = document.createElement('li')
+          const name = m.me ? '나' : m.user.username
+          const ihtml = `[ <span>${name}</span> ] : <span>${m.message}</span><br /><span>${m.date}</span>`
+          li.innerHTML = ihtml
+          chatBox.append(li)
+        })
+      })
+
+      socket.on('message', (data) => {
+        console.log('--->', data)
+        messageBox.push(data)
+        const chatBox = document.querySelector('ul.chat-message-box')
+        chatBox.innerHTML = ''
+
+        messageBox.forEach((m) => {
+          const li = document.createElement('li')
+          const name = m.me ? '나' : m.user.username
+          const ihtml = `[ <span>${name}</span> ] : <span>${m.message}</span><br /><span>${m.date}</span>`
+          li.innerHTML = ihtml
+          chatBox.append(li)
+        })
+      })
+
+      socket.on('read', (data) => {
+        console.log('read --->', data)
+        const targets = data.messages
+        messageBox = [...targets, ...messageBox]
+        const chatBox = document.querySelector('ul.chat-message-box')
+        chatBox.innerHTML = ''
+
+        messageBox.forEach((m) => {
+          const li = document.createElement('li')
+          const name = m.me ? '나' : m.user.username
+          const ihtml = `[ <span>${name}</span> ] : <span>${m.message}</span><br /><span>${m.date}</span>`
+          li.innerHTML = ihtml
+          chatBox.append(li)
+        })
+      })
+
+      const sendButton = document.querySelector('button.send')
+      sendButton.addEventListener('click', () => {
+        const messageTag = document.querySelector('input.input-box')
+        const message = messageTag.value
+        if (!message) {
+          return
+        }
+        console.log('전송!')
+        socket.emit('message', { message: message })
+        messageTag.value = ''
+      })
+
+      const readButton = document.querySelector('button.receive')
+      readButton.addEventListener('click', () => {
+        console.log('이전 채팅!')
+        if (messageBox.length === 0) {
+          return
+        }
+        const firstMessage = messageBox[0]
+        console.log(firstMessage)
+        socket.emit('read', { roomId, message: firstMessage })
+      })
+
+      document.addEventListener('DOMContentLoaded', function () {
+        // Handler when the DOM is fully loaded
+        console.log('!!!!')
+        fetch('http://localhost:4000/api/users/detail')
+          .then((res) => {
+            return res.json()
+          })
+          .then((data) => {
+            const user = data.data
+            const userTag = document.querySelector('span.user')
+            userTag.innerHTML = `${user.username} [ ${user.id} ]`
+          })
+        fetch('http://localhost:4000/api/users/detail')
+          .then((res) => {
+            return res.json()
+          })
+          .then((data) => {
+            const user = data.data
+            const userTag = document.querySelector('span.user')
+            userTag.innerHTML = `${user.username} [ ${user.id} ]`
+            fetch(`http://localhost:4000/api/users/${user.id}/events`)
+              .then((res) => res.json())
+              .then((data) => {
+                console.log(data)
+                const events = data.data
+                const eventsWrapper = document.querySelector('ul.event-list')
+                eventsWrapper.innerHTML = ''
+                events.forEach((event) => {
+                  const eventId = event.event.id
+                  const btn = document.createElement('button')
+                  btn.value = eventId
+                  btn.className = 'enter'
+                  btn.innerText = '입장'
+                  const number = document.createElement('span')
+                  number.innerText = eventId
+                  roomId = eventId
+                  const li = document.createElement('li')
+                  li.append(btn)
+                  li.append(number)
+                  eventsWrapper.append(li)
+                })
+                const enterButtons = document.querySelectorAll('.enter')
+                enterButtons.forEach((enter) => {
+                  enter.addEventListener('click', () => {
+                    const target = event.target
+                    console.log(target.value, '입장에 입장!')
+
+                    const roomId = target.value
+                    socket.emit('room', { roomId })
+                  })
+                })
+              })
+          })
+      })
+    </script>
+  </body>
+</html>

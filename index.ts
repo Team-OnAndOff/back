@@ -1,6 +1,6 @@
 import { Express } from 'express'
 import { Server } from 'http'
-import { app } from './app'
+import { app, httpServer } from './app'
 import mongoose from 'mongoose'
 // const app = require('./app')
 // const config = require('./config/config')
@@ -23,7 +23,7 @@ promises.push(typeorm_connect)
 Promise.all(promises)
   .then(() => {
     logger.info('Connected to MongoDB & MySQL')
-    server = app.listen(process.env.APP_PORT, () => {
+    server = httpServer.listen(process.env.APP_PORT, () => {
       logger.info(`Listening to port ${process.env.APP_PORT}`)
     })
   })
