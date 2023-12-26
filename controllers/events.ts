@@ -42,8 +42,13 @@ export default class EventController extends RequestHandler {
   static updateEvent = catchAsync(async (req: any, res, next) => {
     const { id } = this.extractParams<ParamsDTO>(req, ParamsDTO)
     const body = new BodyDTO(req.body)
-    const event = await service.updateEventById(id, body, req.user.id)
-    res.status(httpStatus.OK).json(createResponse<Event>(event))
+    let file
+    console.log(req.file)
+    if (req.file) {
+      file = this.extractFile<ImageDTO>(req, ImageDTO)
+    }
+    const event = await service.updateEventById(id, body, req.user.id, file)
+    res.status(httpStatus.OK).json(createResponse<Event>())
   })
 
   static deleteEvent = catchAsync(async (req, res, next) => {

@@ -224,14 +224,129 @@ class EventService {
     }
   }
 
-  async updateEventById(eventId: number, body: EventBodyDTO, userId: number) {
-    const response = await this.eventRepo.update({ id: eventId }, body)
+  async updateEventById(
+    eventId: number,
+    body: EventBodyDTO,
+    userId: number,
+    file?: ImageDTO,
+  ) {
+    const existingEvent = await this.getEventById(eventId)
+    if (existingEvent.user.id !== userId) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '내가 작성한 글이 아닙니다.',
+      )
+    }
+    if (existingEvent) {
+      const category = await CategoryService.getSubCategoryById(
+        body.categoryId,
+        body.subCategoryId,
+      )
+      const prevImagePath = existingEvent.image.uploadPath
+      const response = await AppDataSource.manager.transaction(
+        async (transactionalEntityManager) => {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .update(Event)
+            .set({
+              category: category,
+              title: body.title,
+              content: body.content,
+              recruitment: body.recruitment,
+              question: body.question,
+              online: body.online,
+              challengeStartDate: body.challengeStartDate,
+              challengeEndDate: body.challengeEndDate,
+            })
+            .where('id = :eventId', { eventId })
+            .execute()
 
-    if (response.affected === 0) {
-      throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
+          if (body.address) {
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .update(EventAddress)
+              .set({
+                zipCode: body.address.zipCode,
+                detail1: body.address.detail1,
+                detail2: body.address.detail2,
+                latitude: body.address.latitude,
+                longitude: body.address.longitude,
+              })
+              .where('id = :id', { id: existingEvent.address.id })
+              .execute()
+          }
+
+          if (body.hashTag) {
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .delete()
+              .from(EventHashTag)
+              .where('eventId = :eventId', { eventId })
+              .execute()
+
+            const updatedHashTags: EventHashTag[] = []
+            for (let i = 0; i < body.hashTag.length; i++) {
+              const tag = new EventHashTag()
+              tag.hashtag = body.hashTag[i]
+              tag.eventId = existingEvent
+              updatedHashTags.push(tag)
+            }
+
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .insert()
+              .into(EventHashTag)
+              .values(updatedHashTags)
+              .execute()
+          }
+
+          if (file) {
+            const upload = await s3Upload(file, 'events')
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .update(Image)
+              .set({
+                filename: upload.filename,
+                size: upload.size,
+                uploadPath: upload.destination,
+              })
+              .where('id = :id', { id: existingEvent.image.id })
+              .execute()
+          }
+
+          const careerCategoriesToRemove =
+            existingEvent.careerCategories.filter(
+              (category) => !body.careerCategoryIds?.includes(category.id),
+            )
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .relation(Event, 'careerCategories')
+            .of(existingEvent)
+            .remove(careerCategoriesToRemove)
+
+          if (body.careerCategoryIds) {
+            const careerCategoriesToAdd = body.careerCategoryIds.filter(
+              (id) =>
+                !existingEvent.careerCategories.some(
+                  (category) => category.id === id,
+                ),
+            )
+
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .relation(Event, 'careerCategories')
+              .of(existingEvent)
+              .add(careerCategoriesToAdd)
+          }
+        },
+      )
+      if (file) {
+        await s3Delete(prevImagePath)
+      }
+      return response
     }
 
-    return await this.getEventById(eventId)
+    throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
   }
 
   async deleteEventById(eventId: number) {

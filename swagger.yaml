@@ -4,7 +4,7 @@ info:
   description: API 문서
   version: 1.0.0
 servers:
-  - url: http://kdt-sw-7-team05.elicecoding.com:5001/api
+  # - url: http://kdt-sw-7-team05.elicecoding.com:5001/api
   - url: http://localhost:4000/api
 tags:
   - name: auth
@@ -499,14 +499,95 @@ paths:
             type: number
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
+              required:
+                - categoryId
+                - subCategoryId
+                - careerCategoryId
+                - title
+                - content
+                - recruitment
+                - online
+                - question
+                - challengeStartDate
               properties:
-                name:
+                categoryId:
+                  type: number
+                  example: 1
+                  description: 카테고리ID
+                subCategoryId:
+                  type: number
+                  example: 1
+                  description: 서브 카테고리ID
+                careerCategoryId:
+                  type: array
+                  items:
+                    type: number
+                  example: [1, 2, 3]
+                  description: 직업카테고리 ID 배열
+                hashTag:
+                  type: array
+                  items:
+                    type: string
+                  example: ['JS', 'TS', 'React']
+                  description: 해시태그 문자열 배열
+                image:
+                  type: file
+                  example: https://example.com/image/image.png
+                  description: 대표 이미지
+                title:
                   type: string
-                  example: 학생
-        required: true
+                  example: TS + React스터디 모집
+                  description: 모임 제목
+                content:
+                  type: string
+                  example: TS + React스터디 공부 같이 하실분~~
+                  description: 모임 내용
+                recruitment:
+                  type: number
+                  example: 20
+                  description: 모임 정원
+                question:
+                  type: string
+                  example: 간단한 자기소개해주세요.
+                  description: 모임에 대한 질문 내용
+                online:
+                  type: number
+                  example: 1
+                  description: 1 온라인, 0 오프라인
+                challengeStartDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 시작 날짜
+                challengeEndDate:
+                  type: string
+                  example: 2023-12-01
+                  description: 모임 종료 날짜
+                address:
+                  type: object
+                  properties:
+                    zipCode:
+                      type: number
+                      example: 11523
+                      description: 주소(우편번호)
+                    detail1:
+                      type: string
+                      example: 서울특별시 성동구 아차산로17길 48
+                      description: 주소(도로명)
+                    detail2:
+                      type: string
+                      example: 203호
+                      description: 주소(상세)
+                    latitude:
+                      type: number
+                      example: 11523
+                      description: 위도
+                    longitude:
+                      type: number
+                      example: 11523
+                      description: 경도
       responses:
         '200':
           description: 성공
