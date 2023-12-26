@@ -94,6 +94,45 @@ class UserService {
       throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err)
     })
   }
+
+  async checkIfAssessExists(
+    reporterId: number,
+    attendeeId: number,
+    eventId: number,
+  ) {
+    const reporter = await this.findOneById(reporterId)
+    const attendee = await this.findOneById(attendeeId)
+    const event = await this.eventRepo.findOne({ where: { id: eventId } })
+    if (!event) {
+      throw new ApiError(httpStatus.NOT_FOUND, '이벤트 정보가 잘못되었습니다.')
+    }
+    if (!attendee) {
+      throw new ApiError(httpStatus.NOT_FOUND, '참가자 정보가 잘못되었습니다.')
+    }
+    if (!reporter) {
+      throw new ApiError(httpStatus.NOT_FOUND, '리포터 정보가 잘못되었습니다.')
+    }
+    const result = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.reporterId = :reporterId', { reporterId: reporterId })
+      .andWhere('ua.attendee = :attendeeId', { attendee: attendeeId })
+      .andWhere('ua.event = :eventId', { eventId: eventId })
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+      ])
+      .getOne()
+    if (result) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        '해당 그룹의 유저에 대해서 이미 평가가 진행되었습니다.',
+      )
+    }
+  }
+
   async createAssess(dto: PostAssessDTO) {
     const reporter = await this.findOneById(dto.reporterId)
     const attendee = await this.findOneById(dto.attendeeId)
@@ -106,6 +145,25 @@ class UserService {
     }
     if (!reporter) {
       throw new ApiError(httpStatus.NOT_FOUND, '리포터 정보가 잘못되었습니다.')
+    }
+    const previous = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.reporterId = :reporterId', { reporterId: dto.reporterId })
+      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: dto.attendeeId })
+      .andWhere('ua.eventId = :eventId', { eventId: dto.eventId })
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+      ])
+      .getOne()
+    if (previous) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        '해당 그룹의 유저에 대해서 이미 평가가 진행되었습니다.',
+      )
     }
     const assess = this.assessRepo.create({
       eventId: event,
@@ -152,17 +210,25 @@ class UserService {
     }
   }
 
-  async getAssessingList(userId: number) {
+  async getAssessingList(userId: number, eventId?: number | null) {
     // const target = await this.assessRepo.findOne({
     //   where: { id: aid },
     // })
     const user = await this.repo.findOne({ where: { id: userId } })
     if (!user) {
-      throw new ApiError(httpStatus.BAD_REQUEST, '')
+      throw new ApiError(httpStatus.BAD_REQUEST, '존재하지 않는 유저입니다.')
     }
-    const result = await this.assessRepo
+    let query = await this.assessRepo
       .createQueryBuilder('ua')
       .andWhere('ua.reporterId = :reporterId', { reporterId: user.id })
+
+    if (eventId !== null) {
+      query = query.andWhere('ua.eventId = :eventId', {
+        eventId,
+      })
+    }
+
+    const result = query
       .leftJoinAndSelect('ua.reporterId', 'r')
       .leftJoinAndSelect('r.image', 'rimage')
       .leftJoinAndSelect('ua.attendeeId', 'a')

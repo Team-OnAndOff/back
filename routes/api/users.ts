@@ -30,6 +30,15 @@ const userIdValidator = {
     .strict(),
 }
 
+const assessListInEventValidator = {
+  params: z
+    .object({
+      user_id: z.string(),
+      event_id: z.string().optional(),
+    })
+    .strict(),
+}
+
 const MAX_FILE_SIZE = 500000
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
 const updateUserValidator = {
@@ -87,10 +96,16 @@ const deleteAssessValidator = {
 }
 
 router.get(
-  '/:user_id/assess',
-  validateRequest(userIdValidator),
+  '/:user_id/assess/:event_id',
+  validateRequest(assessListInEventValidator),
   UserController.getAssessingList,
 )
+router.get(
+  '/:user_id/assess',
+  validateRequest(assessListInEventValidator),
+  UserController.getAssessingList,
+)
+
 router.get(
   '/:user_id/my-assess',
   isLogin,
