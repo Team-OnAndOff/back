@@ -29,6 +29,13 @@ export default class UserController {
         '해당 아이디를 가진 유저가 존재하지 않습니다.',
       )
     }
+    let me = false
+    if (req.user) {
+      const reqUser: any = req.user
+      if (user.id === reqUser.id) {
+        me = true
+      }
+    }
     res.status(httpStatus.OK).json(
       new ResponseDTO(httpStatus.OK, '', {
         user_id: user.id,
@@ -36,6 +43,7 @@ export default class UserController {
         email: user.email,
         introduction: user.introduction,
         image: user.image,
+        me,
       }),
     )
   })
