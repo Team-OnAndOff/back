@@ -93,7 +93,8 @@ app.use(error.errorHandler)
 
 const io = new Server(httpServer, {
   cors: {
-    origin: '*',
+    origin: [process.env.APP_CLIENT_HOST!],
+    credentials: true,
     methods: ['GET', 'POST'],
   },
 })
