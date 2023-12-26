@@ -52,7 +52,8 @@ export default class UserController {
   })
   static getAssessingList = catchAsync(async (req, res, next) => {
     const userId = Number(req.params.user_id)
-    const result = await userService.getAssessingList(userId)
+    const eventId = req.params.event_id ? Number(req.params.event_id) : null
+    const result = await userService.getAssessingList(userId, eventId)
     res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', result))
   })
   static getAssessedList = catchAsync(async (req, res, next) => {
