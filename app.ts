@@ -91,7 +91,12 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(error.errorConverter)
 app.use(error.errorHandler)
 
-const io = new Server(httpServer, {})
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+})
 
 io.engine.use(sessionMiddleWare)
 
