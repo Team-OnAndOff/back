@@ -76,6 +76,22 @@ class EventService {
       perPage,
     } = query
     const queryBuilder = this.getQueryBuilder()
+    if (search) {
+      queryBuilder.innerJoin(
+        (qb) =>
+          qb
+            .select()
+            .from(EventHashTag, 'tag')
+            .innerJoin(Event, 'events', 'tag.eventId = events.id')
+            .addSelect('tag.eventId, tag.hashtag, events.title')
+            .where('tag.hashtag LIKE :search OR events.title LIKE :search', {
+              search: `%${search}%`,
+            }),
+        'tag',
+        'tag.eventId = event.id',
+      )
+    }
+
     queryBuilder.where('1=1')
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId })
@@ -103,15 +119,10 @@ class EventService {
     } else {
       queryBuilder.orderBy('event.createdAt', order)
     }
+    queryBuilder.addOrderBy('hashtag.hashtag', 'ASC')
+    queryBuilder.addOrderBy('careerCategories.createdAt', 'ASC')
 
     const events = await queryBuilder.getMany()
-    if (search) {
-      return events.filter(
-        (event) =>
-          event.hashTags.find((hashTag) => hashTag.hashtag === search) ||
-          event.title.includes(search),
-      )
-    }
 
     return events
   }
