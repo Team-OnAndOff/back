@@ -81,16 +81,24 @@ class EventService {
         (qb) =>
           qb
             .select()
-            .from(EventHashTag, 'tag')
-            .innerJoin(Event, 'events', 'tag.eventId = events.id')
-            .addSelect('tag.eventId, tag.hashtag, events.title')
+            .from(Event, 'events')
+            .leftJoin(EventHashTag, 'tag', 'tag.eventId = events.id')
+            .addSelect('events.id, tag.hashtag, events.title')
             .where('tag.hashtag LIKE :search OR events.title LIKE :search', {
               search: `%${search}%`,
             }),
         'tag',
-        'tag.eventId = event.id',
+        'tag.id = event.id',
       )
     }
+    queryBuilder
+      .leftJoinAndSelect(
+        'event.eventApplies',
+        'eventApplies',
+        'eventApplies.status = :status AND eventApplies.approvedAt IS NOT NULL AND eventApplies.deletedAt IS NULL',
+        { status: EVENT_APPLY_STATUS.APPROVED },
+      )
+      .leftJoinAndSelect('eventApplies.user', 'appliedUser')
 
     queryBuilder.where('1=1')
     if (categoryId) {
