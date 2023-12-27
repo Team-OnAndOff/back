@@ -112,12 +112,14 @@ router.get(
   validateRequest(userIdValidator),
   UserController.getAssessedList,
 )
+router.get('/related-events', isLogin, UserController.getUserRelatedEvents)
 router.get(
   '/:user_id/events',
   isLogin,
   validateRequest(userIdValidator),
   UserController.getUserAppliedEvents,
 )
+
 router.get(
   '/:user_id/info',
   validateRequest(getUserInfoValidator),

@@ -13,6 +13,7 @@ import { ApiError } from '../utils/error'
 import { User } from '../models/typeorm/entity/User'
 import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
+import { EVENT_APPLY_STATUS } from '../types'
 // import { IUserRequest } from '../config/passport'
 
 interface UserRequest extends Request {
@@ -70,9 +71,6 @@ export default class UserController {
     res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', result))
   })
   static postAssess = catchAsync(async (req, res, next) => {
-    if (!req.user) {
-      throw new ApiError(httpStatus.BAD_REQUEST, '')
-    }
     const user = req.user as any
     const user_id = user.id
     const dto = new PostAssessDTO(user_id, req.body)
@@ -114,10 +112,36 @@ export default class UserController {
     async (req: Request & { user?: any }, res, next) => {
       const userId = Number(req.params.user_id)
       console.log('--->', userId)
-      const result = await userService.getUserAppliedEvents(userId)
+      const result = await userService.getUserAppliedEvents(
+        userId,
+        EVENT_APPLY_STATUS.APPROVED,
+      )
       res
         .status(httpStatus.OK)
         .json(new ResponseDTO(httpStatus.OK, '등록된 모임목록', result))
+    },
+  )
+  static getUserRelatedEvents = catchAsync(
+    async (req: Request & { user?: any }, res, next) => {
+      const userId = Number(req.user.id)
+      const pending = await userService.getUserAppliedEvents(
+        userId,
+        EVENT_APPLY_STATUS.APPLY,
+      )
+      const made = await userService.getUserMadeEvents(userId)
+      const approved = await userService.getUserAppliedEvents(
+        userId,
+        EVENT_APPLY_STATUS.APPROVED,
+      )
+      const liked = await userService.getUserLikedEvents(userId)
+      res.status(httpStatus.OK).json(
+        new ResponseDTO(httpStatus.OK, '유저와 관련된 모임목록', {
+          pending,
+          approved,
+          made,
+          liked,
+        }),
+      )
     },
   )
 }

@@ -22,17 +22,27 @@ import { Image } from '../models/typeorm/entity/Image'
 import { Multer } from 'multer'
 import { EventApply } from '../models/typeorm/entity/EventApply'
 
+import {
+  EVENT_APPLY_FLAG,
+  EVENT_APPLY_STATUS,
+  EVENT_ORDER,
+  EVENT_SORT,
+} from '../types'
+import { EventLike } from '../models/typeorm/entity/EventLike'
+
 class UserService {
   private repo
   private assessRepo
   private eventRepo
   private eventApplyRepo
+  private eventLikeRepo
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventApplyRepo = AppDataSource.getRepository(EventApply)
+    this.eventLikeRepo = AppDataSource.getRepository(EventLike)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -186,9 +196,6 @@ class UserService {
   }
 
   async deleteAssess(assessId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
     const result = await this.assessRepo.delete({ id: assessId })
     return result
   }
@@ -211,16 +218,9 @@ class UserService {
   }
 
   async getAssessingList(userId: number, eventId?: number | null) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(httpStatus.BAD_REQUEST, '존재하지 않는 유저입니다.')
-    }
     let query = await this.assessRepo
       .createQueryBuilder('ua')
-      .andWhere('ua.reporterId = :reporterId', { reporterId: user.id })
+      .andWhere('ua.reporterId = :reporterId', { reporterId: userId })
 
     if (eventId !== null) {
       query = query.andWhere('ua.eventId = :eventId', {
@@ -250,19 +250,9 @@ class UserService {
     return result
   }
   async getAssessedList(userId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        '평가 대상자는 존재하지 않는 유저입니다.',
-      )
-    }
     const result = await this.assessRepo
       .createQueryBuilder('ua')
-      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: user.id })
+      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: userId })
       .leftJoinAndSelect('ua.reporterId', 'r')
       .leftJoinAndSelect('r.image', 'rimage')
       .leftJoinAndSelect('ua.attendeeId', 'a')
@@ -284,25 +274,33 @@ class UserService {
 
     return result
   }
-  async getUserAppliedEvents(userId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        '평가 대상자는 존재하지 않는 유저입니다.',
-      )
-    }
-    console.log(user)
+  async getUserAppliedEvents(userId: number, status: EVENT_APPLY_STATUS) {
     const result = await this.eventApplyRepo
       .createQueryBuilder('ea')
       .andWhere('ea.userId = :userId', { userId })
-      .andWhere('ea.status = :status', { status: 3 })
+      .andWhere('ea.status = :status', { status })
       .leftJoinAndSelect('ea.event', 'ev')
       .leftJoinAndSelect('ev.image', 'img')
       .select(['ea.id', 'ev.id', 'ev.title', 'img.uploadPath'])
+      .getMany()
+    return result
+  }
+  async getUserMadeEvents(userId: number) {
+    const result = await this.eventRepo
+      .createQueryBuilder('ev')
+      .andWhere('ev.userId = :userId', { userId })
+      .leftJoinAndSelect('ev.image', 'img')
+      .select(['ev.id', 'ev.title', 'img.uploadPath'])
+      .getMany()
+    return result
+  }
+  async getUserLikedEvents(userId: number) {
+    const result = await this.eventLikeRepo
+      .createQueryBuilder('el')
+      .andWhere('el.userId = :userId', { userId })
+      .leftJoinAndSelect('el.event', 'ev')
+      .leftJoinAndSelect('ev.image', 'img')
+      .select(['el.id', 'ev.id', 'ev.title', 'img.uploadPath'])
       .getMany()
     return result
   }
