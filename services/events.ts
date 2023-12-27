@@ -24,7 +24,7 @@ import {
   EVENT_ORDER,
   EVENT_SORT,
 } from '../types'
-
+import ChatService from './chat'
 class EventService {
   private readonly eventRepo
   private readonly eventLikeRepo
@@ -226,6 +226,21 @@ class EventService {
       event.eventApplies = applies
 
       const response = await AppDataSource.manager.save(event)
+
+      // 채팅방 등록
+      const chatUser = await ChatService.createChatUser(user)
+      const room = await ChatService.createChatRoom(
+        response,
+        body.categoryId,
+        chatUser,
+      )
+      await ChatService.createChatMessage(
+        'system',
+        `${user.username}님이 입장하였습니다.`,
+        chatUser._id.toString(),
+        room._id.toString(),
+      )
+
       return response
     } catch (err) {
       await s3Delete(upload.filename)
@@ -352,6 +367,9 @@ class EventService {
       if (file) {
         await s3Delete(prevImagePath)
       }
+      // 채팅방 수정
+      const eve = await this.getEventById(eventId)
+      await ChatService.updateChatRoom(eve, body.categoryId)
       return response
     }
 
@@ -399,6 +417,9 @@ class EventService {
     if (response.affected === 0) {
       throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
     }
+
+    // 채팅방 삭제
+    await ChatService.deleteChatRoom(eventId)
 
     return response
   }
@@ -552,7 +573,7 @@ class EventService {
         return await transactionalEntityManager
           .createQueryBuilder()
           .update(EventApply)
-          .set(filteredData)
+          .set({ ...filteredData, approvedAt: new Date() })
           .where('id = :id', { id: applyId })
           .andWhere('eventId = :eventId', { eventId })
           .andWhere('userId = :userId', { userId })
@@ -566,6 +587,25 @@ class EventService {
         '수정할 데이터가 존재하지 않습니다.',
       )
     }
+
+    // 채팅방에 추가
+    if (dto.status === EVENT_APPLY_STATUS.APPROVED) {
+      const user = await UserService.findOneById(userId)
+      if (user) {
+        const chatUser = await ChatService.createChatUser(user)
+        const room = await ChatService.getChatRoomByRoomId(eventId)
+        if (room) {
+          await ChatService.joinRoomUser(eventId, chatUser._id.toString())
+          await ChatService.createChatMessage(
+            'system',
+            `${user.username}님이 입장하였습니다.`,
+            chatUser._id.toString(),
+            room._id.toString(),
+          )
+        }
+      }
+    }
+
     return response
   }
 

@@ -1,22 +1,36 @@
-import { Schema, model } from 'mongoose'
-const { nanoid } = require('nanoid')
+import mongoose, { Schema, model, ObjectId } from 'mongoose'
 
-interface IChatRoom {
-  _id: string
-  groupId: string
-  userId: number
+export interface IChatRoom {
+  _id: ObjectId
+  room: number
+  name: string
+  image: string
+  category: string
+  lastMessage: string
+  users: ObjectId[]
   createdAt: Date
   updatedAt: Date
 }
 
 const chatRoomSchema = new Schema<IChatRoom>(
   {
-    _id: {
+    room: { type: Number, required: true },
+    name: {
       type: String,
-      default: () => nanoid(),
+      required: true,
     },
-    groupId: { type: String, required: true },
-    userId: { type: Number, required: true },
+    image: {
+      type: String,
+      required: true,
+    },
+    category: {
+      type: String,
+      required: true,
+    },
+    lastMessage: {
+      type: String,
+    },
+    users: [{ type: Schema.Types.ObjectId }],
   },
   {
     timestamps: true,

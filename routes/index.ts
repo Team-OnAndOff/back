@@ -9,6 +9,7 @@ import careerCategoryRouter from './api/careerCategories'
 import authRouter from './api/auth'
 import userRouter from './api/users'
 import reportsUserRouter from './api/reportUsers'
+import chatRouter from './api/chat'
 
 logger.info('API 라우터 올라옴')
 
@@ -20,3 +21,4 @@ export const apiRouter = router
   .use('/auth', authRouter)
   .use('/users', userRouter)
   .use('/reports-user', reportsUserRouter)
+  .use('/chat', chatRouter)

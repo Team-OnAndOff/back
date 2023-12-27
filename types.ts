@@ -29,3 +29,29 @@ export enum EVENT_ORDER {
   ASC = 'ASC',
   DESC = 'DESC',
 }
+
+export enum CHAT {
+  CONNECT = 'connect',
+  ROOM_JOIN = 'room',
+  PREV_MESSAGES = 'getPrevMessages',
+  SEND_MESSAGE = 'sendMessage',
+  MESSAGE = 'message',
+  MESSAGES = 'read',
+  DISCONNECT = 'disconnect',
+  ROOMS = 'rooms',
+  USER_INFO = 'userinfo',
+}
+export interface ChatUser {
+  _id: string
+  userId: number
+  online: boolean
+  createdAt: Date
+  updatedAt: Date
+}
+export interface ChatMessage {
+  _id: string
+  type: 'text' | 'image' | 'link' | 'system'
+  message: string
+  user: ChatUser
+  createdAt: Date
+}

@@ -1,12 +1,10 @@
-import { Schema, model } from 'mongoose'
-// const { nanoid } = require('nanoid')
-import { v4 } from 'uuid'
+import mongoose, { Schema, model, ObjectId } from 'mongoose'
 
-interface IChatMessage {
-  _id: string
+export interface IChatMessage {
+  _id: ObjectId
   type: string
-  userId: number
-  chatRoomId: number
+  user: ObjectId
+  room: ObjectId
   message: string
   createdAt: Date
   updatedAt: Date
@@ -14,13 +12,18 @@ interface IChatMessage {
 
 const chatMessageSchema = new Schema<IChatMessage>(
   {
-    _id: {
+    type: {
       type: String,
-      default: () => v4(),
+      enum: ['text', 'image', 'link', 'system'],
+      default: 'text',
+      required: true,
     },
-    type: { type: String, enum: ['text', 'image', 'link'], required: true },
-    userId: { type: Number, required: true },
-    chatRoomId: { type: Number, required: true },
+    user: { type: Schema.Types.ObjectId, required: true, ref: 'User' },
+    room: {
+      type: Schema.Types.ObjectId,
+      required: true,
+      ref: 'ChatRoom',
+    },
     message: { type: String, required: true },
   },
   {

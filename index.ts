@@ -15,7 +15,7 @@ dotenv.config()
 let server: Server
 const mongodb_url = `mongodb+srv://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_LOCATION}/?retryWrites=true&w=majority`
 
-const mongoose_connect = mongoose.connect(mongodb_url)
+export const mongoose_connect = mongoose.connect(mongodb_url)
 const typeorm_connect = AppDataSource.initialize()
 const promises = []
 promises.push(mongoose_connect)
