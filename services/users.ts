@@ -29,6 +29,8 @@ import {
   EVENT_SORT,
 } from '../types'
 import { EventLike } from '../models/typeorm/entity/EventLike'
+import { Category } from '../models/typeorm/entity/Category'
+import { SubCategory } from '../models/typeorm/entity/SubCategory'
 
 class UserService {
   private repo
@@ -36,6 +38,8 @@ class UserService {
   private eventRepo
   private eventApplyRepo
   private eventLikeRepo
+  private categoryRepy
+  private subCategoryRepo
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
@@ -43,6 +47,8 @@ class UserService {
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventApplyRepo = AppDataSource.getRepository(EventApply)
     this.eventLikeRepo = AppDataSource.getRepository(EventLike)
+    this.categoryRepy = AppDataSource.getRepository(Category)
+    this.subCategoryRepo = AppDataSource.getRepository(SubCategory)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -302,6 +308,28 @@ class UserService {
       .leftJoinAndSelect('ev.image', 'img')
       .select(['el.id', 'ev.id', 'ev.title', 'img.uploadPath'])
       .getMany()
+    return result
+  }
+  async getUserAppliedEventsCount(userId: number, eventType: number) {
+    // eventType : 1 크루, 2 챌린지
+    const result = await this.eventApplyRepo
+      .createQueryBuilder('ea')
+      .leftJoinAndSelect('ea.event', 'ev')
+      .leftJoinAndSelect('ev.category', 'subcat')
+      .leftJoinAndSelect('subcat.parentId', 'parentcat')
+      .andWhere('ea.userId = :userId', { userId })
+      .andWhere('ea.status = :status', { status: 3 })
+      .andWhere('parentcat.id = :pid', { pid: eventType })
+      .select(['COUNT(ev.id) as count'])
+      .getRawOne()
+    return result
+  }
+  async getUserMadeEventsCount(userId: number) {
+    const result = await this.eventRepo
+      .createQueryBuilder('event')
+      .andWhere('event.userId = :userId', { userId })
+      .select(['COUNT(event.id) as count'])
+      .getRawOne()
     return result
   }
 }

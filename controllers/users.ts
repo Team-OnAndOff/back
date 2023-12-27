@@ -144,4 +144,24 @@ export default class UserController {
       )
     },
   )
+  static getUserBadges = catchAsync(
+    async (req: Request & { user?: any }, res, next) => {
+      const userId = Number(req.user.id)
+      const crewCount = await userService.getUserAppliedEventsCount(userId, 1)
+      const madeCount = await userService.getUserMadeEventsCount(userId)
+      const challengeCount = await userService.getUserAppliedEventsCount(
+        userId,
+        2,
+      )
+      const result = {
+        crew: crewCount,
+        challenges: challengeCount,
+        made: madeCount,
+      }
+
+      res
+        .status(httpStatus.OK)
+        .json(new ResponseDTO(httpStatus.OK, '유저 뱃지!', result))
+    },
+  )
 }
