@@ -287,7 +287,7 @@ class UserService {
       .andWhere('ea.status = :status', { status })
       .leftJoinAndSelect('ea.event', 'ev')
       .leftJoinAndSelect('ev.image', 'img')
-      .select(['ea.id', 'ev.id', 'ev.title', 'img.uploadPath'])
+      .select(['ea.id', 'ev.id', 'ev', 'img.uploadPath'])
       .getMany()
     return result
   }
@@ -296,7 +296,7 @@ class UserService {
       .createQueryBuilder('ev')
       .andWhere('ev.userId = :userId', { userId })
       .leftJoinAndSelect('ev.image', 'img')
-      .select(['ev.id', 'ev.title', 'img.uploadPath'])
+      .select(['ev.id', 'ev', 'img.uploadPath'])
       .getMany()
     return result
   }
@@ -306,7 +306,7 @@ class UserService {
       .andWhere('el.userId = :userId', { userId })
       .leftJoinAndSelect('el.event', 'ev')
       .leftJoinAndSelect('ev.image', 'img')
-      .select(['el.id', 'ev.id', 'ev.title', 'img.uploadPath'])
+      .select(['el.id', 'ev', 'img.uploadPath'])
       .getMany()
     return result
   }
