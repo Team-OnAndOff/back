@@ -67,6 +67,9 @@ router.get(
     }
     req.session.originUrl = originUrl
     req.session.profileUrl = profileUrl
+    res.locals.originUrl = originUrl
+    console.log('#', req.session.id, req.session, res.locals)
+
     nextMiddleware(req, res, next)
   },
 )
@@ -76,14 +79,16 @@ router.get(
 
   (req, res, next) => {
     logger.info('callback으로 돌아옴!')
+    res.locals.originUrl = req.session.originUrl
+    res.locals.profileUrl = req.session.profileUrl
     passport.authenticate(req.params.social, {
       // successRedirect: req.session.originUrl,
     })(req, res, next)
   },
   (req, res, next) => {
     const reqUser: any = req.user
-    if (req.session.originUrl) {
-      if (req.session.isNewUser) {
+    if (res.locals.originUrl) {
+      if (res.locals.isNewUser) {
         return res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
       }
       return res.redirect(req.session.originUrl || '')

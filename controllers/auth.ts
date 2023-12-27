@@ -5,8 +5,8 @@ import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 export default class AuthController {
   static getLoginCallback = catchAsync(async (req, res, next) => {
     if (req.isAuthenticated()) {
-      if (req.session.originUrl) {
-        return res.redirect(req.session.originUrl)
+      if (res.locals.originUrl) {
+        return res.redirect(res.locals.originUrl)
       }
       res
         .status(httpStatus.OK)
