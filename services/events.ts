@@ -40,10 +40,10 @@ class EventService {
     return this.eventRepo
       .createQueryBuilder('event')
       .innerJoinAndSelect('event.user', 'user')
-      .leftJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('user.image', 'userImage')
       .innerJoinAndSelect('event.category', 'subCategory')
       .innerJoinAndSelect('subCategory.parentId', 'category')
-      .leftJoinAndSelect('event.image', 'image')
+      .innerJoinAndSelect('event.image', 'image')
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .leftJoinAndSelect('event.likes', 'likes')
@@ -119,8 +119,6 @@ class EventService {
     } else {
       queryBuilder.orderBy('event.createdAt', order)
     }
-    queryBuilder.addOrderBy('hashtag.hashtag', 'ASC')
-    queryBuilder.addOrderBy('careerCategories.createdAt', 'ASC')
 
     const events = await queryBuilder.getMany()
 
