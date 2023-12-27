@@ -83,9 +83,9 @@ router.get(
     const reqUser: any = req.user
     if (req.session.originUrl) {
       if (req.session.isNewUser) {
-        res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
+        return res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
       }
-      res.redirect(req.session.originUrl || '')
+      return res.redirect(req.session.originUrl || '')
     }
     next()
   },
