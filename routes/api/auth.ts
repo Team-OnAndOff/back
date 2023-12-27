@@ -88,10 +88,10 @@ router.get(
   (req, res, next) => {
     const reqUser: any = req.user
     if (res.locals.originUrl) {
-      if (res.locals.isNewUser) {
-        return res.redirect(`${req.session.profileUrl}/${reqUser.id}` || '')
+      if (req.session.isNewUser) {
+        return res.redirect(`${res.locals.profileUrl}/${reqUser.id}` || '')
       }
-      return res.redirect(req.session.originUrl || '')
+      return res.redirect(res.locals.originUrl || '')
     }
     next()
   },
