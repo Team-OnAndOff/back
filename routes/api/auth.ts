@@ -48,9 +48,8 @@ router.get(
   validateRequest(socialValidator),
   (req, res, next) => {
     logger.info('social Login!', req.user)
-    req.session.originUrl = `${req.query.host}${req.query.redirectPath}`
-    req.session.profileUrl = `${req.query.host}${req.query.profilePath}`
-    console.log(req.sessionID, req.session)
+    const originUrl = `${req.query.host}${req.query.redirectPath}`
+    const profileUrl = `${req.query.host}${req.query.profilePath}`
 
     const socialName = req.params.social
     let nextMiddleware = null
@@ -66,6 +65,8 @@ router.get(
     } else {
       nextMiddleware = passport.authenticate(socialName)
     }
+    req.session.originUrl = originUrl
+    req.session.profileUrl = profileUrl
     nextMiddleware(req, res, next)
   },
 )

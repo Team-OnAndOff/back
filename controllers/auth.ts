@@ -6,8 +6,7 @@ export default class AuthController {
   static getLoginCallback = catchAsync(async (req, res, next) => {
     if (req.isAuthenticated()) {
       if (req.session.originUrl) {
-        console.log(req.sessionID, req.session)
-        res.redirect(req.session.originUrl)
+        return res.redirect(req.session.originUrl)
       }
       res
         .status(httpStatus.OK)
