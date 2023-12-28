@@ -123,7 +123,7 @@ export default class UserController {
   )
   static getUserRelatedEvents = catchAsync(
     async (req: Request & { user?: any }, res, next) => {
-      const userId = Number(req.params.id)
+      const userId = Number(req.params.user_id)
       const user = await userService.findOneById(userId)
       if (!user) {
         throw new ApiError(
@@ -131,7 +131,6 @@ export default class UserController {
           '해당 아이디를 가진 유저가 존재하지 않습니다.',
         )
       }
-
       const pending = await userService.getUserAppliedEvents(
         userId,
         EVENT_APPLY_STATUS.APPLY,
