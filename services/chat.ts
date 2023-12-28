@@ -77,7 +77,7 @@ class ChatService {
   async joinRoomUser(roomId: number, userId: string) {
     return await ChatRoom.updateOne(
       {
-        groupId: roomId,
+        room: roomId,
       },
       {
         $push: { users: userId },
@@ -115,12 +115,12 @@ class ChatService {
   // 방에 들어감
   async createRoomUser(roomId: number, userId: ObjectId) {
     let room = await ChatRoom.findOne({
-      groupId: roomId,
+      room: roomId,
     })
 
     if (!room) {
       room = await ChatRoom.create({
-        groupId: roomId,
+        room: roomId,
         users: [userId],
       })
     } else {
@@ -130,7 +130,7 @@ class ChatService {
       if (!user) {
         await ChatRoom.updateOne(
           {
-            groupId: roomId,
+            room: roomId,
           },
           {
             $push: { users: userId },
@@ -161,7 +161,7 @@ class ChatService {
 
   // 방 조회
   async getRoomByRoomId(roomId: number) {
-    return await ChatRoom.findOne({ groupId: roomId })
+    return await ChatRoom.findOne({ room: roomId })
   }
 
   // 유저 조회
