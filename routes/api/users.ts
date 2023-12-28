@@ -113,7 +113,11 @@ router.get(
   validateRequest(userIdValidator),
   UserController.getAssessedList,
 )
-router.get('/related-events', isLogin, UserController.getUserRelatedEvents)
+router.get(
+  '/:user_id/related-events',
+  validateRequest(userIdValidator),
+  UserController.getUserRelatedEvents,
+)
 router.get(
   '/:user_id/badges',
   validateRequest(userIdValidator),
