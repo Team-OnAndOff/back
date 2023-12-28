@@ -77,7 +77,7 @@ const postAssessValidator = {
     .object({
       eventId: z.number(),
       attendeeId: z.number(),
-      score: z.number().min(0).max(5),
+      score: z.number().min(-5).max(5),
       description: z.string().optional(),
     })
     .strict(),
@@ -86,7 +86,7 @@ const updateAssessValidator = {
   params: z.object({ assess_id: z.string() }).strict(),
   body: z
     .object({
-      score: z.number().min(0).max(5),
+      score: z.number().min(-5).max(5),
       description: z.string().optional(),
     })
     .strict(),
