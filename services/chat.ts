@@ -25,11 +25,23 @@ class ChatService {
 
   async getRoom(id: string) {
     return await ChatRoom.findById({ _id: id })
+      .populate({
+        path: 'users',
+        model: ChatUser,
+        select: '_id username image',
+      })
+      .exec()
   }
 
   // 채팅방 조회
   async getChatRoomByRoomId(room: number) {
     return await ChatRoom.findOne({ room })
+      .populate({
+        path: 'users',
+        model: ChatUser,
+        select: '_id username image',
+      })
+      .exec()
   }
 
   // 채팅방 수정
@@ -80,7 +92,7 @@ class ChatService {
         room: roomId,
       },
       {
-        $push: { users: userId },
+        $addToSet: { users: userId },
       },
       { new: true },
     )
@@ -153,6 +165,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
+        select: '_id username image',
       })
       .exec()
 
@@ -162,6 +175,12 @@ class ChatService {
   // 방 조회
   async getRoomByRoomId(roomId: number) {
     return await ChatRoom.findOne({ room: roomId })
+      .populate({
+        path: 'users',
+        model: ChatUser,
+        select: '_id username image',
+      })
+      .exec()
   }
 
   // 유저 조회

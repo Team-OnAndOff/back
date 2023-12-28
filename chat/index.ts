@@ -6,6 +6,7 @@ import httpStatus from 'http-status'
 import { ApiError } from '../utils/error'
 import { ChatUser } from '../models/mongo/chatUser'
 import { ChatRoom } from '../models/mongo/chatRoom'
+import { ChatMessage } from '../models/mongo/chatMessage'
 
 const router = Router()
 
@@ -29,8 +30,19 @@ export const setWebsockets = async (io: Server) => {
   ChatRoom.watch().on('change', async (change) => {
     const operationType = change.operationType
     if (operationType === 'update') {
-      const room = await ChatService.getRoom(change.documentKey._id.toString())
-      io.emit(CHAT.ROOM_INFO, { room })
+      const roomId = change.documentKey._id.toString()
+      const room = await ChatService.getRoom(roomId)
+      io.to(roomId).emit(CHAT.ROOM_INFO, { room })
+    }
+  })
+
+  // 유저가 방에 들어왔을때 보여주기
+  ChatMessage.watch().on('change', async (change) => {
+    const operationType = change.operationType
+    if (operationType === 'insert' && change.fullDocument.type === 'system') {
+      const roomId = change.fullDocument.room.toString()
+      console.log('asdf', change)
+      io.to(roomId).emit(CHAT.USER_JOIN, { message: change.fullDocument })
     }
   })
 
@@ -62,9 +74,7 @@ export const setWebsockets = async (io: Server) => {
             })
 
             const room = await ChatService.getRoom(roomId)
-            io.emit(CHAT.ROOM_INFO, {
-              room,
-            })
+            io.emit(CHAT.ROOM_INFO, { room })
             cb({ code: httpStatus.OK })
           } catch (error) {
             if (error instanceof Error || error instanceof ApiError) {
