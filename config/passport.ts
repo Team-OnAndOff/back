@@ -45,6 +45,8 @@ const bringUser = async (
   if (photo) {
     image = new Image()
     image.uploadPath = photo
+    image.filename = 'default'
+    image.size = 100
   }
   console.log(image)
   if (!user) {
