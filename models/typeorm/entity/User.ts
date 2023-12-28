@@ -26,6 +26,9 @@ export class User extends BaseAutoIdEntity {
   @Column({ type: 'text' })
   introduction?: string
 
+  @Column({ type: 'text' })
+  hashtag?: string
+
   @OneToOne(() => Image, {
     nullable: true,
     onDelete: 'CASCADE',

@@ -50,7 +50,6 @@ export default class UserController {
   })
   static getUserDetail = catchAsync(async (req, res, next) => {
     const reqUser: any = req.user
-    const user = await userService.findOneBySocialId(reqUser.id)
     const { socialId, createdAt, updatedAt, deletedAt, ...rest } = reqUser
     res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', rest))
   })
