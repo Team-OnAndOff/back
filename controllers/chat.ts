@@ -25,4 +25,10 @@ export default class ChatController {
     const rooms = await ChatService.getRooms(Number(req.user.id))
     res.status(httpStatus.OK).json(createResponse<IChatRoom[]>(rooms))
   })
+
+  // 방 정보 가져오기
+  static getRoom = catchAsync(async (req: any, res, next) => {
+    const room = await ChatService.getRoomByRoomId(Number(req.params.roomId))
+    res.status(httpStatus.OK).json(createResponse<IChatRoom | null>(room))
+  })
 }
