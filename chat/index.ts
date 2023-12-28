@@ -1,13 +1,11 @@
-import { createServer } from 'http'
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
+import { Router } from 'express'
+import ChatService from '../services/chat'
+import { CHAT } from '../types'
+import httpStatus from 'http-status'
+import { ApiError } from '../utils/error'
+import { ChatUser } from '../models/mongo/chatUser'
 
-import express from 'express'
-
-import { Express, Router } from 'express'
-import { Session } from 'inspector'
-import { SessionData } from 'express-session'
-import userService from '../services/users'
-import { ChatMessage } from '../models/mongo/chatMessage'
 const router = Router()
 
 router.use('/home', (req, res) => {
@@ -16,109 +14,91 @@ router.use('/home', (req, res) => {
 
 export const WEBSOCKET_PORT = 5000
 
-export const setWebsockets = (io: Server) => {
-  io.on('connection', async (socket) => {
-    console.log('connect client by Socket.io')
-
-    const creq: any = socket.request
-    const ses: SessionData = creq.session
-    let roomId = 0
-    if (!Object.hasOwn(ses, 'passport')) {
-      socket.emit('first', {
-        connect: false,
-        message: '회원만 사용가능합니다.',
-      })
-      return
+export const setWebsockets = async (io: Server) => {
+  // 유저 정보가 갱신될떄 이름 사진 업데이트
+  ChatUser.watch().on('change', async (change) => {
+    const operationType = change.operationType
+    if (operationType === 'update') {
+      const user = await ChatService.getUser(change.documentKey._id.toString())
+      io.emit(CHAT.USER_INFO, user)
     }
+  })
 
-    socket.emit('first', {
-      connect: true,
-      message: '연결되었습니다. 진행됩니다.',
-    })
+  io.on(CHAT.CONNECT, async (socket: Socket) => {
+    try {
+      console.log('connect client by Socket.io: ', socket.id)
 
-    const socialId = ses.passport.user
-    console.log(socialId)
-    let user = await userService.findOneBySocialId(socialId)
+      // 메세지 보내기
+      socket.on(
+        CHAT.SEND_MESSAGE,
+        async (
+          {
+            userId,
+            roomId,
+            message,
+          }: { userId: string; roomId: string; message: string },
+          cb,
+        ) => {
+          try {
+            const response = await ChatService.createChatMessage(
+              'text',
+              message,
+              userId,
+              roomId,
+            )
+            const user = await ChatService.getUser(userId)
+            io.to(roomId).emit(CHAT.MESSAGE, {
+              message: { ...response.toJSON(), user },
+            })
 
-    socket.on('message', async (data) => {
-      if (roomId === 0) {
-        socket.emit('message', {
-          message: '채팅방에 입장되어야 이용가능합니다.',
-        })
-        return
-      }
-      const date = new Date()
-      const item = await ChatMessage.create({
-        type: 'text',
-        userId: user?.id,
-        chatRoomId: roomId,
-        message: data.message,
-      })
-      console.log(item)
-      socket.in(String(roomId)).emit('message', {
-        user: user,
-        date: date,
-        message: data.message,
-        me: false,
-      })
-      socket.emit('message', {
-        user: user,
-        date: date,
-        message: data.message,
-        me: true,
-      })
-    })
-    socket.on('read', async (data) => {
-      console.log(data)
-      const { message, roomId } = data
-      const { date } = message
-      console.log('date@@@@', Date.parse(date))
-      let messages = await ChatMessage.find({
-        chatRoomId: roomId,
-        createdAt: {
-          $lt: Date.parse(date),
+            const room = await ChatService.getRoom(roomId)
+            io.emit(CHAT.ROOMS, {
+              room,
+            })
+            cb({ code: httpStatus.OK })
+          } catch (error) {
+            if (error instanceof Error || error instanceof ApiError) {
+              cb({
+                code: httpStatus.INTERNAL_SERVER_ERROR,
+                message: error.message,
+              })
+            }
+          }
         },
+      )
+
+      // 채팅방에 입장했을떄
+      socket.on(CHAT.ROOM_JOIN, async ({ roomId }: { roomId: string }, cb) => {
+        try {
+          socket.join(roomId)
+          const room = await ChatService.getRoom(roomId)
+          console.log(`enter the room : ${roomId}`)
+
+          // 메세지 가져오기
+          let messages = await ChatService.getChatMessages(roomId)
+          socket.emit(CHAT.PREV_MESSAGES, { messages })
+
+          cb({
+            code: httpStatus.OK,
+            message: `${roomId}번 채팅방에 입장했습니다.`,
+          })
+        } catch (error) {
+          socket.leave(roomId)
+          if (error instanceof Error || error instanceof ApiError) {
+            cb({
+              code: httpStatus.INTERNAL_SERVER_ERROR,
+              message: error.message,
+            })
+          }
+        }
       })
-        .sort({ createdAt: -1 })
-        .limit(10)
 
-      const result: any[] = []
-      for (const m of messages) {
-        const user = await userService.findOneById(m.userId)
-        result.push({ message: m.message, date: m.createdAt, user })
-      }
-      socket.emit('read', {
-        roomId: roomId,
-        messages: result.reverse(),
+      socket.on(CHAT.DISCONNECT, () => {
+        console.log('user is disconnected')
       })
-    })
-    socket.on('room', async (data) => {
-      const target = data.roomId
-      console.log('last :', roomId)
-      console.log('current :', target)
-      roomId = target
-      if (roomId !== 0) {
-        socket.leave(String(roomId))
-      }
-      socket.join(String(roomId))
-
-      console.log(`enter the room : ${target}`)
-
-      let messages = await ChatMessage.find({ chatRoomId: roomId })
-        .sort({ createdAt: -1 })
-        .limit(10)
-
-      const result: any[] = []
-      for (const m of messages) {
-        const user = await userService.findOneById(m.userId)
-        result.push({ message: m.message, date: m.createdAt, user })
-      }
-
-      socket.emit('entered', {
-        roomId: target,
-        messages: result.reverse(),
-      })
-    })
+    } catch (error) {
+      console.error('Error in Socket.io connect event:', error)
+    }
   })
 }
 
