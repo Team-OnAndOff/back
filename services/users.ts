@@ -285,18 +285,76 @@ class UserService {
       .createQueryBuilder('ea')
       .andWhere('ea.userId = :userId', { userId })
       .andWhere('ea.status = :status', { status })
-      .leftJoinAndSelect('ea.event', 'ev')
-      .leftJoinAndSelect('ev.image', 'img')
-      .select(['ea.id', 'ev.id', 'ev', 'img.uploadPath'])
+      .leftJoinAndSelect('ea.event', 'event')
+      .innerJoinAndSelect('event.user', 'user')
+      .innerJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .select([
+        'ea.id',
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
       .getMany()
     return result
   }
   async getUserMadeEvents(userId: number) {
     const result = await this.eventRepo
-      .createQueryBuilder('ev')
-      .andWhere('ev.userId = :userId', { userId })
-      .leftJoinAndSelect('ev.image', 'img')
-      .select(['ev.id', 'ev', 'img.uploadPath'])
+      .createQueryBuilder('event')
+
+      .leftJoinAndSelect('event.user', 'user')
+      .leftJoinAndSelect('user.image', 'userImage')
+
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .andWhere('event.userId = :userId', { userId })
+      .select([
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
       .getMany()
     return result
   }
@@ -304,9 +362,37 @@ class UserService {
     const result = await this.eventLikeRepo
       .createQueryBuilder('el')
       .andWhere('el.userId = :userId', { userId })
-      .leftJoinAndSelect('el.event', 'ev')
-      .leftJoinAndSelect('ev.image', 'img')
-      .select(['el.id', 'ev', 'img.uploadPath'])
+      .leftJoinAndSelect('el.event', 'event')
+      .innerJoinAndSelect('event.user', 'user')
+      .innerJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .select([
+        'el.id',
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
       .getMany()
     return result
   }
