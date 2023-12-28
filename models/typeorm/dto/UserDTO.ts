@@ -60,6 +60,7 @@ export class UpdateUserDTO extends UserIdDTO {
   username?: string
   email?: string
   introduction?: string
+  hashtag?: string
   image?: Express.Multer.File
   constructor(
     userId: string,
