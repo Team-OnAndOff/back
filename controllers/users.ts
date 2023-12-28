@@ -146,7 +146,14 @@ export default class UserController {
   )
   static getUserBadges = catchAsync(
     async (req: Request & { user?: any }, res, next) => {
-      const userId = Number(req.user.id)
+      const userId = Number(req.params.user_id)
+      const user = await userService.findOneById(userId)
+      if (!user) {
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          '해당 아이디를 가진 유저가 존재하지 않습니다.',
+        )
+      }
       const crewCount = await userService.getUserAppliedEventsCount(userId, 1)
       const madeCount = await userService.getUserMadeEventsCount(userId)
       const challengeCount = await userService.getUserAppliedEventsCount(
