@@ -50,7 +50,7 @@ const updateUserValidator = {
   body: z
     .object({
       username: z.string().optional(),
-      hashtag: z.string().max(20).optional(),
+      hashtag: z.string().max(40).optional(),
       email: z.string().email('이메일 형식이 잘못되었습니다.').optional(),
       introduction: z.string().optional(),
       image: z
