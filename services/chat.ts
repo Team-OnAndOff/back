@@ -86,6 +86,18 @@ class ChatService {
     })
   }
 
+  async updateChatUser(user: User | null) {
+    if (user) {
+      return await ChatUser.findOneAndUpdate(
+        { userId: user.id },
+        {
+          image: user.image.uploadPath,
+          username: user.username,
+        },
+      )
+    }
+  }
+
   // 방에 들어가기
   async joinRoomUser(roomId: number, userId: IUser) {
     return await ChatRoom.findOneAndUpdate(

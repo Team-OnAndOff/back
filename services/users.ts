@@ -31,6 +31,7 @@ import {
 import { EventLike } from '../models/typeorm/entity/EventLike'
 import { Category } from '../models/typeorm/entity/Category'
 import { SubCategory } from '../models/typeorm/entity/SubCategory'
+import ChatService from './chat'
 
 class UserService {
   private repo
@@ -121,6 +122,7 @@ class UserService {
         where: { id: dto.id },
         relations: ['image'],
       })
+      await ChatService.updateChatUser(user)
       return user
     }).catch(async (err) => {
       if (upload) {
