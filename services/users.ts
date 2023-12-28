@@ -60,8 +60,13 @@ class UserService {
     return user
   }
   async findOneBySocialId(socialId: string): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { socialId } })
-    return user
+    const result = await this.repo
+      .createQueryBuilder('u')
+      .andWhere('u.socialId = :socialId', { socialId })
+      .leftJoinAndSelect('u.image', 'img')
+      .select(['u', 'img.uploadPath'])
+      .getOne()
+    return result
   }
   async createUser(dto: CreateUserDTO) {
     const user = await this.repo.save({ ...dto })
