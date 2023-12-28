@@ -114,7 +114,7 @@ router.get(
 )
 router.get('/related-events', isLogin, UserController.getUserRelatedEvents)
 router.get(
-  '/badges',
+  '/:user_id/badges',
   validateRequest(userIdValidator),
   UserController.getUserBadges,
 )
