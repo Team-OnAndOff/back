@@ -86,6 +86,7 @@ class ChatService {
     })
   }
 
+  // 방에 들어가기
   async joinRoomUser(roomId: number, userId: IUser) {
     return await ChatRoom.findOneAndUpdate(
       {
@@ -95,6 +96,14 @@ class ChatService {
         $addToSet: { users: userId },
       },
       { new: true },
+    )
+  }
+
+  // 채팅방 나가기
+  async leaveChatRoom(roomId: number, userId: IUser) {
+    return await ChatRoom.updateOne(
+      { room: roomId },
+      { $pull: { users: userId._id } },
     )
   }
 
@@ -167,6 +176,7 @@ class ChatService {
         model: ChatUser,
         select: '_id username image userId',
       })
+      .sort({ createdAt: -1 })
       .exec()
 
     return chatRooms
@@ -201,22 +211,16 @@ class ChatService {
   async getChatMessages(room: string, page?: string) {
     const perPage = 50
     if (page) {
-      return await ChatMessage.find({
-        room,
-      })
+      return await ChatMessage.find({ room })
         .populate('user')
         .limit(perPage)
         .skip(perPage * Number(page))
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
     } else {
       return await ChatMessage.find({ room })
         .populate('user')
         .limit(perPage)
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
     }
   }
 }
