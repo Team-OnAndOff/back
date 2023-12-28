@@ -40,6 +40,7 @@ class UserService {
   private eventLikeRepo
   private categoryRepy
   private subCategoryRepo
+  private imageRepo
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
@@ -49,6 +50,7 @@ class UserService {
     this.eventLikeRepo = AppDataSource.getRepository(EventLike)
     this.categoryRepy = AppDataSource.getRepository(Category)
     this.subCategoryRepo = AppDataSource.getRepository(SubCategory)
+    this.imageRepo = AppDataSource.getRepository(Image)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -65,6 +67,22 @@ class UserService {
     const user = await this.repo.save({ ...dto })
     return user
   }
+  async saveImage(filePath: string, filename: string, size: number) {
+    const targetImage = new Image()
+    targetImage.filename = filename
+    targetImage.size = size
+    targetImage.uploadPath = filePath
+    const result = await this.imageRepo.save(targetImage)
+    return result
+  }
+
+  async updateUserForImage(userId: number, image: Image) {
+    const upload = await this.imageRepo.save(image)
+    const result = await this.repo.update({ id: userId }, { image: upload })
+    console.log(result)
+    return result
+  }
+
   async updateUser(dto: UpdateUserDTO) {
     let upload: ImageDTO
     return await AppDataSource.transaction(async (manager) => {
@@ -356,7 +374,12 @@ class UserService {
         'eventLikesUser',
       ])
       .getMany()
-    return result
+
+    return result.map((event) => {
+      return {
+        event,
+      }
+    })
   }
   async getUserLikedEvents(userId: number) {
     const result = await this.eventLikeRepo
