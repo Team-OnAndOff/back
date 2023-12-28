@@ -6,6 +6,7 @@ export interface IChatMessage {
   user: ObjectId
   room: ObjectId
   message: string
+  readUsers: ObjectId[]
   createdAt: Date
   updatedAt: Date
 }
@@ -25,6 +26,7 @@ const chatMessageSchema = new Schema<IChatMessage>(
       ref: 'ChatRoom',
     },
     message: { type: String, required: true },
+    readUsers: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   },
   {
     timestamps: true,

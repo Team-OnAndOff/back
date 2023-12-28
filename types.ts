@@ -38,8 +38,8 @@ export enum CHAT {
   MESSAGE = 'message',
   MESSAGES = 'read',
   DISCONNECT = 'disconnect',
-  ROOMS = 'rooms',
   USER_INFO = 'userinfo',
+  ROOM_INFO = 'roomInfo',
 }
 export interface ChatUser {
   _id: string

@@ -5,6 +5,7 @@ import { CHAT } from '../types'
 import httpStatus from 'http-status'
 import { ApiError } from '../utils/error'
 import { ChatUser } from '../models/mongo/chatUser'
+import { ChatRoom } from '../models/mongo/chatRoom'
 
 const router = Router()
 
@@ -21,6 +22,15 @@ export const setWebsockets = async (io: Server) => {
     if (operationType === 'update') {
       const user = await ChatService.getUser(change.documentKey._id.toString())
       io.emit(CHAT.USER_INFO, user)
+    }
+  })
+
+  // 채팅방 정보가 갱신될떄 이름 사진 업데이트
+  ChatRoom.watch().on('change', async (change) => {
+    const operationType = change.operationType
+    if (operationType === 'update') {
+      const room = await ChatService.getRoom(change.documentKey._id.toString())
+      io.emit(CHAT.ROOM_INFO, { room })
     }
   })
 
@@ -52,7 +62,7 @@ export const setWebsockets = async (io: Server) => {
             })
 
             const room = await ChatService.getRoom(roomId)
-            io.emit(CHAT.ROOMS, {
+            io.emit(CHAT.ROOM_INFO, {
               room,
             })
             cb({ code: httpStatus.OK })

@@ -30,7 +30,7 @@ const chatRoomSchema = new Schema<IChatRoom>(
     lastMessage: {
       type: String,
     },
-    users: [{ type: Schema.Types.ObjectId }],
+    users: [{ type: Schema.Types.ObjectId, req: 'User' }],
   },
   {
     timestamps: true,

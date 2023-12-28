@@ -5,6 +5,7 @@ export interface IUser {
   userId: number
   username: string
   image: string
+  socketId: string
   online: boolean
   createdAt: Date
   updatedAt: Date
@@ -24,6 +25,10 @@ const userSchema = new Schema<IUser>(
     online: {
       type: Boolean,
       default: false,
+    },
+    socketId: {
+      type: String,
+      required: false,
     },
   },
   {
