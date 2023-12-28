@@ -93,12 +93,19 @@ paths:
         '5xx':
           description: 서버 에러
 
-  /users/badges:
+  /users/{userId}/badges:
     get:
       tags:
         - users
       summary: 유저 배지 정보
       description: 유저 배지 정보를 가져오는 API
+      parameters:
+        - name: userId
+          in: path
+          description: 유저 ID
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: 성공
