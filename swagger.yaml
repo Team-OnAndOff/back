@@ -194,6 +194,10 @@ paths:
                   type: file
                   example: https://example.com/image/image.png
                   description: 유저 이미지
+                hashtag:
+                  type: string
+                  example: 태그1,태그2,태그3
+                  description: 해시태그
       responses:
         '200':
           description: 성공
