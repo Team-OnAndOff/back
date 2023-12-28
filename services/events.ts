@@ -603,7 +603,7 @@ class EventService {
         const chatUser = await ChatService.createChatUser(user)
         const room = await ChatService.getChatRoomByRoomId(eventId)
         if (room) {
-          await ChatService.joinRoomUser(eventId, chatUser._id.toString())
+          await ChatService.joinRoomUser(eventId, chatUser)
           await ChatService.createChatMessage(
             'system',
             `${user.username}님이 입장하였습니다.`,

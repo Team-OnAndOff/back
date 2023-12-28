@@ -28,7 +28,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }
@@ -39,7 +39,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }
@@ -86,8 +86,8 @@ class ChatService {
     })
   }
 
-  async joinRoomUser(roomId: number, userId: string) {
-    return await ChatRoom.updateOne(
+  async joinRoomUser(roomId: number, userId: IUser) {
+    return await ChatRoom.findOneAndUpdate(
       {
         room: roomId,
       },
@@ -165,7 +165,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
 
@@ -178,7 +178,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }

@@ -41,7 +41,6 @@ export const setWebsockets = async (io: Server) => {
     const operationType = change.operationType
     if (operationType === 'insert' && change.fullDocument.type === 'system') {
       const roomId = change.fullDocument.room.toString()
-      console.log('asdf', change)
       io.to(roomId).emit(CHAT.USER_JOIN, { message: change.fullDocument })
     }
   })
