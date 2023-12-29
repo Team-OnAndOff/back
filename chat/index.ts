@@ -7,6 +7,7 @@ import { ApiError } from '../utils/error'
 import { ChatUser } from '../models/mongo/chatUser'
 import { ChatRoom } from '../models/mongo/chatRoom'
 import { ChatMessage } from '../models/mongo/chatMessage'
+import { RateLimiterMemory } from 'rate-limiter-flexible'
 
 const router = Router()
 
@@ -15,6 +16,11 @@ router.use('/home', (req, res) => {
 })
 
 export const WEBSOCKET_PORT = 5000
+
+const createRateLimiter = new RateLimiterMemory({
+  points: 200, // 200 points
+  duration: 60, // per second
+})
 
 export const setWebsockets = async (io: Server) => {
   // 유저 정보가 갱신될떄 이름 사진 업데이트
@@ -29,7 +35,10 @@ export const setWebsockets = async (io: Server) => {
   // 채팅방 정보가 갱신될떄 이름 사진 업데이트
   ChatRoom.watch().on('change', async (change) => {
     const operationType = change.operationType
-    if (operationType === 'update') {
+    if (
+      operationType === 'update' &&
+      change.updateDescription.updatedFields.name
+    ) {
       const roomId = change.documentKey._id.toString()
       const room = await ChatService.getRoom(roomId)
       io.to(roomId).emit(CHAT.ROOM_INFO, { room })
@@ -44,8 +53,6 @@ export const setWebsockets = async (io: Server) => {
       io.to(roomId).emit(CHAT.USER_JOIN, { message: change.fullDocument })
     }
   })
-
-  const lastMessageTime: any = {}
 
   io.on(CHAT.CONNECT, async (socket: Socket) => {
     try {
@@ -63,20 +70,7 @@ export const setWebsockets = async (io: Server) => {
           cb,
         ) => {
           try {
-            const currentTime = new Date().getTime()
-
-            if (
-              lastMessageTime[socket.id] &&
-              currentTime - lastMessageTime[socket.id] < 1000
-            ) {
-              cb({
-                code: httpStatus.TOO_MANY_REQUESTS,
-                message: '1초에 1개의 메세지만 보낼 수 있습니다.',
-              })
-              return
-            }
-
-            lastMessageTime[socket.id] = currentTime
+            await createRateLimiter.consume(socket.handshake.address)
 
             const response = await ChatService.createChatMessage(
               'text',
