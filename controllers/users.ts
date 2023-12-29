@@ -43,6 +43,7 @@ export default class UserController {
         username: user.username,
         email: user.email,
         introduction: user.introduction,
+        hashtag: user.hashtag,
         image: user.image,
         me,
       }),
