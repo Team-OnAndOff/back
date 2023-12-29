@@ -344,7 +344,7 @@ class UserService {
       .getMany()
     return result
   }
-  async getUserMadeEvents(userId: number) {
+  async getUserMadeEvents(userId: number, status: EVENT_APPLY_STATUS) {
     const result = await this.eventRepo
       .createQueryBuilder('event')
 
@@ -354,7 +354,9 @@ class UserService {
       .innerJoinAndSelect('event.category', 'subCategory')
       .innerJoinAndSelect('subCategory.parentId', 'category')
       .innerJoinAndSelect('event.image', 'image')
-
+      .innerJoin('event.eventApplies', 'ea', 'ea.status = :status', {
+        status,
+      })
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .leftJoinAndSelect('event.likes', 'likes')
