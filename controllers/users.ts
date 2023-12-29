@@ -138,7 +138,7 @@ export default class UserController {
       )
       const made = await userService.getUserMadeEvents(
         userId,
-        EVENT_APPLY_STATUS.APPLY,
+        EVENT_APPLY_STATUS.APPROVED,
       )
       const approved = await userService.getUserAppliedEvents(
         userId,
