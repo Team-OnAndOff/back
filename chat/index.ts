@@ -45,6 +45,8 @@ export const setWebsockets = async (io: Server) => {
     }
   })
 
+  const lastMessageTime: any = {}
+
   io.on(CHAT.CONNECT, async (socket: Socket) => {
     try {
       console.log('connect client by Socket.io: ', socket.id)
@@ -61,6 +63,21 @@ export const setWebsockets = async (io: Server) => {
           cb,
         ) => {
           try {
+            const currentTime = new Date().getTime()
+
+            if (
+              lastMessageTime[socket.id] &&
+              currentTime - lastMessageTime[socket.id] < 1000
+            ) {
+              cb({
+                code: httpStatus.TOO_MANY_REQUESTS,
+                message: '1초에 1개의 메세지만 보낼 수 있습니다.',
+              })
+              return
+            }
+
+            lastMessageTime[socket.id] = currentTime
+
             const response = await ChatService.createChatMessage(
               'text',
               message,
