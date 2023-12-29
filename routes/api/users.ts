@@ -50,6 +50,7 @@ const updateUserValidator = {
   body: z
     .object({
       username: z.string().optional(),
+      hashtag: z.string().max(40).optional(),
       email: z.string().email('이메일 형식이 잘못되었습니다.').optional(),
       introduction: z.string().optional(),
       image: z
@@ -112,7 +113,11 @@ router.get(
   validateRequest(userIdValidator),
   UserController.getAssessedList,
 )
-router.get('/related-events', isLogin, UserController.getUserRelatedEvents)
+router.get(
+  '/:user_id/related-events',
+  validateRequest(userIdValidator),
+  UserController.getUserRelatedEvents,
+)
 router.get(
   '/:user_id/badges',
   validateRequest(userIdValidator),

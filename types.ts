@@ -40,6 +40,7 @@ export enum CHAT {
   DISCONNECT = 'disconnect',
   USER_INFO = 'userinfo',
   ROOM_INFO = 'roomInfo',
+  USER_JOIN = 'userJoin',
 }
 export interface ChatUser {
   _id: string

@@ -43,6 +43,7 @@ export default class UserController {
         username: user.username,
         email: user.email,
         introduction: user.introduction,
+        hashtag: user.hashtag,
         image: user.image,
         me,
       }),
@@ -50,7 +51,7 @@ export default class UserController {
   })
   static getUserDetail = catchAsync(async (req, res, next) => {
     const reqUser: any = req.user
-    const { socialId, ...rest } = reqUser
+    const { socialId, createdAt, updatedAt, deletedAt, ...rest } = reqUser
     res.status(httpStatus.OK).json(new ResponseDTO(httpStatus.OK, '', rest))
   })
   static updateUser = catchAsync(async (req, res, next) => {
@@ -123,12 +124,22 @@ export default class UserController {
   )
   static getUserRelatedEvents = catchAsync(
     async (req: Request & { user?: any }, res, next) => {
-      const userId = Number(req.user.id)
+      const userId = Number(req.params.user_id)
+      const user = await userService.findOneById(userId)
+      if (!user) {
+        throw new ApiError(
+          httpStatus.NOT_FOUND,
+          '해당 아이디를 가진 유저가 존재하지 않습니다.',
+        )
+      }
       const pending = await userService.getUserAppliedEvents(
         userId,
         EVENT_APPLY_STATUS.APPLY,
       )
-      const made = await userService.getUserMadeEvents(userId)
+      const made = await userService.getUserMadeEvents(
+        userId,
+        EVENT_APPLY_STATUS.APPLY,
+      )
       const approved = await userService.getUserAppliedEvents(
         userId,
         EVENT_APPLY_STATUS.APPROVED,

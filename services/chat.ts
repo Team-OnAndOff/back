@@ -28,7 +28,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }
@@ -39,7 +39,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }
@@ -86,15 +86,36 @@ class ChatService {
     })
   }
 
-  async joinRoomUser(roomId: number, userId: string) {
-    return await ChatRoom.updateOne(
+  async updateChatUser(user: User | null) {
+    if (user) {
+      return await ChatUser.findOneAndUpdate(
+        { userId: user.id },
+        {
+          image: user.image.uploadPath,
+          username: user.username,
+        },
+      )
+    }
+  }
+
+  // 방에 들어가기
+  async joinRoomUser(roomId: number, userId: IUser) {
+    return await ChatRoom.findOneAndUpdate(
       {
         room: roomId,
       },
       {
-        $push: { users: userId },
+        $addToSet: { users: userId },
       },
       { new: true },
+    )
+  }
+
+  // 채팅방 나가기
+  async leaveChatRoom(roomId: number, userId: IUser) {
+    return await ChatRoom.updateOne(
+      { room: roomId },
+      { $pull: { users: userId._id } },
     )
   }
 
@@ -165,8 +186,9 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
+      .sort({ createdAt: -1 })
       .exec()
 
     return chatRooms
@@ -178,7 +200,7 @@ class ChatService {
       .populate({
         path: 'users',
         model: ChatUser,
-        select: '_id username image',
+        select: '_id username image userId',
       })
       .exec()
   }
@@ -201,22 +223,16 @@ class ChatService {
   async getChatMessages(room: string, page?: string) {
     const perPage = 50
     if (page) {
-      return await ChatMessage.find({
-        room,
-      })
+      return await ChatMessage.find({ room })
         .populate('user')
         .limit(perPage)
         .skip(perPage * Number(page))
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
     } else {
       return await ChatMessage.find({ room })
         .populate('user')
         .limit(perPage)
-        .sort({
-          createdAt: -1,
-        })
+        .sort({ createdAt: -1 })
     }
   }
 }

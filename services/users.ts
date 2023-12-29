@@ -31,6 +31,7 @@ import {
 import { EventLike } from '../models/typeorm/entity/EventLike'
 import { Category } from '../models/typeorm/entity/Category'
 import { SubCategory } from '../models/typeorm/entity/SubCategory'
+import ChatService from './chat'
 
 class UserService {
   private repo
@@ -40,6 +41,7 @@ class UserService {
   private eventLikeRepo
   private categoryRepy
   private subCategoryRepo
+  private imageRepo
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
@@ -49,6 +51,7 @@ class UserService {
     this.eventLikeRepo = AppDataSource.getRepository(EventLike)
     this.categoryRepy = AppDataSource.getRepository(Category)
     this.subCategoryRepo = AppDataSource.getRepository(SubCategory)
+    this.imageRepo = AppDataSource.getRepository(Image)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -58,13 +61,34 @@ class UserService {
     return user
   }
   async findOneBySocialId(socialId: string): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { socialId } })
-    return user
+    const result = await this.repo
+      .createQueryBuilder('u')
+      .andWhere('u.socialId = :socialId', { socialId })
+      .leftJoinAndSelect('u.image', 'img')
+      .select(['u', 'img.uploadPath'])
+      .getOne()
+    return result
   }
   async createUser(dto: CreateUserDTO) {
     const user = await this.repo.save({ ...dto })
     return user
   }
+  async saveImage(filePath: string, filename: string, size: number) {
+    const targetImage = new Image()
+    targetImage.filename = filename
+    targetImage.size = size
+    targetImage.uploadPath = filePath
+    const result = await this.imageRepo.save(targetImage)
+    return result
+  }
+
+  async updateUserForImage(userId: number, image: Image) {
+    const upload = await this.imageRepo.save(image)
+    const result = await this.repo.update({ id: userId }, { image: upload })
+    console.log(result)
+    return result
+  }
+
   async updateUser(dto: UpdateUserDTO) {
     let upload: ImageDTO
     return await AppDataSource.transaction(async (manager) => {
@@ -98,6 +122,7 @@ class UserService {
         where: { id: dto.id },
         relations: ['image'],
       })
+      await ChatService.updateChatUser(user)
       return user
     }).catch(async (err) => {
       if (upload) {
@@ -319,7 +344,7 @@ class UserService {
       .getMany()
     return result
   }
-  async getUserMadeEvents(userId: number) {
+  async getUserMadeEvents(userId: number, status: EVENT_APPLY_STATUS) {
     const result = await this.eventRepo
       .createQueryBuilder('event')
 
@@ -329,7 +354,9 @@ class UserService {
       .innerJoinAndSelect('event.category', 'subCategory')
       .innerJoinAndSelect('subCategory.parentId', 'category')
       .innerJoinAndSelect('event.image', 'image')
-
+      .innerJoin('event.eventApplies', 'ea', 'ea.status = :status', {
+        status,
+      })
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .leftJoinAndSelect('event.likes', 'likes')
@@ -356,7 +383,12 @@ class UserService {
         'eventLikesUser',
       ])
       .getMany()
-    return result
+
+    return result.map((event) => {
+      return {
+        event,
+      }
+    })
   }
   async getUserLikedEvents(userId: number) {
     const result = await this.eventLikeRepo

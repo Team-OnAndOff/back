@@ -603,10 +603,28 @@ class EventService {
         const chatUser = await ChatService.createChatUser(user)
         const room = await ChatService.getChatRoomByRoomId(eventId)
         if (room) {
-          await ChatService.joinRoomUser(eventId, chatUser._id.toString())
+          await ChatService.joinRoomUser(eventId, chatUser)
           await ChatService.createChatMessage(
             'system',
             `${user.username}님이 입장하였습니다.`,
+            chatUser._id.toString(),
+            room._id.toString(),
+          )
+        }
+      }
+    }
+
+    // 채팅방에서 삭제
+    if (dto.status === EVENT_APPLY_STATUS.LEAVE) {
+      const user = await UserService.findOneById(userId)
+      if (user) {
+        const chatUser = await ChatService.createChatUser(user)
+        const room = await ChatService.getChatRoomByRoomId(eventId)
+        if (room) {
+          await ChatService.leaveChatRoom(eventId, chatUser)
+          await ChatService.createChatMessage(
+            'system',
+            `${user.username}님이 퇴장하였습니다.`,
             chatUser._id.toString(),
             room._id.toString(),
           )
