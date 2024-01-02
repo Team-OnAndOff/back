@@ -30,20 +30,25 @@ export default class EventController extends RequestHandler {
     res.status(httpStatus.OK).json(createResponse<Event>(event))
   })
 
-  static createEvent = catchAsync(async (req, res, next) => {
+  static createEvent = catchAsync(async (req: any, res, next) => {
     const file = this.extractFile<ImageDTO>(req, ImageDTO)
-    const body = this.extractBody<BodyDTO>(req, BodyDTO)
-    await service.createEvent(body, file)
+    const body = new BodyDTO(req.body)
+    await service.createEvent(body, file, req.user.id)
     res
       .status(httpStatus.OK)
       .json(createResponse<Event>(undefined, httpStatus.CREATED, '등록 성공'))
   })
 
-  static updateEvent = catchAsync(async (req, res, next) => {
+  static updateEvent = catchAsync(async (req: any, res, next) => {
     const { id } = this.extractParams<ParamsDTO>(req, ParamsDTO)
-    const body = this.extractBody<BodyDTO>(req, BodyDTO)
-    const event = await service.updateEventById(id, body)
-    res.status(httpStatus.OK).json(createResponse<Event>(event))
+    const body = new BodyDTO(req.body)
+    let file
+    console.log(req.file)
+    if (req.file) {
+      file = this.extractFile<ImageDTO>(req, ImageDTO)
+    }
+    const event = await service.updateEventById(id, body, req.user.id, file)
+    res.status(httpStatus.OK).json(createResponse<Event>())
   })
 
   static deleteEvent = catchAsync(async (req, res, next) => {

@@ -22,17 +22,37 @@ import { Image } from '../models/typeorm/entity/Image'
 import { Multer } from 'multer'
 import { EventApply } from '../models/typeorm/entity/EventApply'
 
+import {
+  EVENT_APPLY_FLAG,
+  EVENT_APPLY_STATUS,
+  EVENT_ORDER,
+  EVENT_SORT,
+} from '../types'
+import { EventLike } from '../models/typeorm/entity/EventLike'
+import { Category } from '../models/typeorm/entity/Category'
+import { SubCategory } from '../models/typeorm/entity/SubCategory'
+import ChatService from './chat'
+
 class UserService {
   private repo
   private assessRepo
   private eventRepo
   private eventApplyRepo
+  private eventLikeRepo
+  private categoryRepy
+  private subCategoryRepo
+  private imageRepo
+
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventRepo = AppDataSource.getRepository(Event)
     this.eventApplyRepo = AppDataSource.getRepository(EventApply)
+    this.eventLikeRepo = AppDataSource.getRepository(EventLike)
+    this.categoryRepy = AppDataSource.getRepository(Category)
+    this.subCategoryRepo = AppDataSource.getRepository(SubCategory)
+    this.imageRepo = AppDataSource.getRepository(Image)
   }
   async findOneById(userId: number): Promise<User | null> {
     const user = await this.repo.findOne({
@@ -42,12 +62,32 @@ class UserService {
     return user
   }
   async findOneBySocialId(socialId: string): Promise<User | null> {
-    const user = await this.repo.findOne({ where: { socialId } })
-    return user
+    const result = await this.repo
+      .createQueryBuilder('u')
+      .andWhere('u.socialId = :socialId', { socialId })
+      .leftJoinAndSelect('u.image', 'img')
+      .select(['u', 'img.uploadPath'])
+      .getOne()
+    return result
   }
   async createUser(dto: CreateUserDTO) {
     const user = await this.repo.save({ ...dto })
     return user
+  }
+  async saveImage(filePath: string, filename: string, size: number) {
+    const targetImage = new Image()
+    targetImage.filename = filename
+    targetImage.size = size
+    targetImage.uploadPath = filePath
+    const result = await this.imageRepo.save(targetImage)
+    return result
+  }
+
+  async updateUserForImage(userId: number, image: Image) {
+    const upload = await this.imageRepo.save(image)
+    const result = await this.repo.update({ id: userId }, { image: upload })
+    console.log(result)
+    return result
   }
   async updateUser(dto: UpdateUserDTO) {
     let upload: ImageDTO
@@ -82,6 +122,7 @@ class UserService {
         where: { id: dto.id },
         relations: ['image'],
       })
+      await ChatService.updateChatUser(user)
       return user
     }).catch(async (err) => {
       if (upload) {
@@ -94,6 +135,45 @@ class UserService {
       throw new ApiError(httpStatus.INTERNAL_SERVER_ERROR, err)
     })
   }
+
+  async checkIfAssessExists(
+    reporterId: number,
+    attendeeId: number,
+    eventId: number,
+  ) {
+    const reporter = await this.findOneById(reporterId)
+    const attendee = await this.findOneById(attendeeId)
+    const event = await this.eventRepo.findOne({ where: { id: eventId } })
+    if (!event) {
+      throw new ApiError(httpStatus.NOT_FOUND, '이벤트 정보가 잘못되었습니다.')
+    }
+    if (!attendee) {
+      throw new ApiError(httpStatus.NOT_FOUND, '참가자 정보가 잘못되었습니다.')
+    }
+    if (!reporter) {
+      throw new ApiError(httpStatus.NOT_FOUND, '리포터 정보가 잘못되었습니다.')
+    }
+    const result = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.reporterId = :reporterId', { reporterId: reporterId })
+      .andWhere('ua.attendee = :attendeeId', { attendee: attendeeId })
+      .andWhere('ua.event = :eventId', { eventId: eventId })
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+      ])
+      .getOne()
+    if (result) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        '해당 그룹의 유저에 대해서 이미 평가가 진행되었습니다.',
+      )
+    }
+  }
+
   async createAssess(dto: PostAssessDTO) {
     const reporter = await this.findOneById(dto.reporterId)
     const attendee = await this.findOneById(dto.attendeeId)
@@ -106,6 +186,26 @@ class UserService {
     }
     if (!reporter) {
       throw new ApiError(httpStatus.NOT_FOUND, '리포터 정보가 잘못되었습니다.')
+    }
+
+    const previous = await this.assessRepo
+      .createQueryBuilder('ua')
+      .andWhere('ua.reporterId = :reporterId', { reporterId: dto.reporterId })
+      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: dto.attendeeId })
+      .andWhere('ua.eventId = :eventId', { eventId: dto.eventId })
+      .select([
+        'ua.id',
+        'ua.score',
+        'ua.description',
+        'ua.createdAt',
+        'ua.updatedAt',
+      ])
+      .getOne()
+    if (previous) {
+      throw new ApiError(
+        httpStatus.BAD_REQUEST,
+        '해당 그룹의 유저에 대해서 이미 평가가 진행되었습니다.',
+      )
     }
     const assess = this.assessRepo.create({
       eventId: event,
@@ -128,9 +228,6 @@ class UserService {
   }
 
   async deleteAssess(assessId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
     const result = await this.assessRepo.delete({ id: assessId })
     return result
   }
@@ -152,17 +249,18 @@ class UserService {
     }
   }
 
-  async getAssessingList(userId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(httpStatus.BAD_REQUEST, '')
-    }
-    const result = await this.assessRepo
+  async getAssessingList(userId: number, eventId?: number | null) {
+    let query = await this.assessRepo
       .createQueryBuilder('ua')
-      .andWhere('ua.reporterId = :reporterId', { reporterId: user.id })
+      .andWhere('ua.reporterId = :reporterId', { reporterId: userId })
+
+    if (eventId !== null) {
+      query = query.andWhere('ua.eventId = :eventId', {
+        eventId,
+      })
+    }
+
+    const result = query
       .leftJoinAndSelect('ua.reporterId', 'r')
       .leftJoinAndSelect('r.image', 'rimage')
       .leftJoinAndSelect('ua.attendeeId', 'a')
@@ -184,19 +282,9 @@ class UserService {
     return result
   }
   async getAssessedList(userId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        '평가 대상자는 존재하지 않는 유저입니다.',
-      )
-    }
     const result = await this.assessRepo
       .createQueryBuilder('ua')
-      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: user.id })
+      .andWhere('ua.attendeeId = :attendeeId', { attendeeId: userId })
       .leftJoinAndSelect('ua.reporterId', 'r')
       .leftJoinAndSelect('r.image', 'rimage')
       .leftJoinAndSelect('ua.attendeeId', 'a')
@@ -218,26 +306,150 @@ class UserService {
 
     return result
   }
-  async getUserAppliedEvents(userId: number) {
-    // const target = await this.assessRepo.findOne({
-    //   where: { id: aid },
-    // })
-    const user = await this.repo.findOne({ where: { id: userId } })
-    if (!user) {
-      throw new ApiError(
-        httpStatus.BAD_REQUEST,
-        '평가 대상자는 존재하지 않는 유저입니다.',
-      )
-    }
-    console.log(user)
+
+  async getUserAppliedEvents(userId: number, status: EVENT_APPLY_STATUS) {
     const result = await this.eventApplyRepo
       .createQueryBuilder('ea')
       .andWhere('ea.userId = :userId', { userId })
-      .andWhere('ea.status = :status', { status: 3 })
-      .leftJoinAndSelect('ea.event', 'ev')
-      .leftJoinAndSelect('ev.image', 'img')
-      .select(['ea.id', 'ev.id', 'ev.title', 'img.uploadPath'])
+      .andWhere('ea.status = :status', { status })
+      .leftJoinAndSelect('ea.event', 'event')
+      .innerJoinAndSelect('event.user', 'user')
+      .innerJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .select([
+        'ea.id',
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
       .getMany()
+    return result
+  }
+  async getUserMadeEvents(userId: number, status: EVENT_APPLY_STATUS) {
+    const result = await this.eventRepo
+      .createQueryBuilder('event')
+
+      .leftJoinAndSelect('event.user', 'user')
+      .leftJoinAndSelect('user.image', 'userImage')
+
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+      .innerJoin('event.eventApplies', 'ea', 'ea.status = :status', {
+        status,
+      })
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .andWhere('event.userId = :userId', { userId })
+      .select([
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
+      .getMany()
+
+    return result.map((event) => {
+      return {
+        event,
+      }
+    })
+  }
+  async getUserLikedEvents(userId: number) {
+    const result = await this.eventLikeRepo
+      .createQueryBuilder('el')
+      .andWhere('el.userId = :userId', { userId })
+      .leftJoinAndSelect('el.event', 'event')
+      .innerJoinAndSelect('event.user', 'user')
+      .innerJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('event.category', 'subCategory')
+      .innerJoinAndSelect('subCategory.parentId', 'category')
+      .innerJoinAndSelect('event.image', 'image')
+      .leftJoinAndSelect('event.address', 'address')
+      .leftJoinAndSelect('event.hashTags', 'hashtag')
+      .leftJoinAndSelect('event.likes', 'likes')
+      .leftJoinAndSelect('event.careerCategories', 'careerCategories')
+      .leftJoinAndSelect('likes.user', 'eventLikesUser')
+      .addSelect((subQuery) => {
+        return subQuery
+          .select('COUNT(eventLikes.id)', 'count')
+          .from(EventLike, 'eventLikes')
+          .where('eventLikes.eventId = event.id')
+      }, 'eventLikes')
+      .select([
+        'el.id',
+        'event',
+        'user',
+        'userImage',
+        'subCategory',
+        'category',
+        'image',
+        'address',
+        'hashtag',
+        'likes',
+        'careerCategories',
+        'eventLikesUser',
+      ])
+      .getMany()
+    return result
+  }
+  async getUserAppliedEventsCount(userId: number, eventType: number) {
+    // eventType : 1 크루, 2 챌린지
+    const result = await this.eventApplyRepo
+      .createQueryBuilder('ea')
+      .leftJoinAndSelect('ea.event', 'ev')
+      .leftJoinAndSelect('ev.category', 'subcat')
+      .leftJoinAndSelect('subcat.parentId', 'parentcat')
+      .andWhere('ea.userId = :userId', { userId })
+      .andWhere('ea.status = :status', { status: 3 })
+      .andWhere('parentcat.id = :pid', { pid: eventType })
+      .select(['COUNT(ev.id) as count'])
+      .getRawOne()
+    return result
+  }
+  async getUserMadeEventsCount(userId: number) {
+    const result = await this.eventRepo
+      .createQueryBuilder('event')
+      .andWhere('event.userId = :userId', { userId })
+      .select(['COUNT(event.id) as count'])
+      .getRawOne()
     return result
   }
 }

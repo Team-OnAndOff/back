@@ -17,7 +17,6 @@ import { EVENT_ORDER, EVENT_SORT } from '../../../types'
 interface EventRequestBody {
   readonly categoryId: number
   readonly subCategoryId: number
-  readonly userId: number
   readonly careerCategoryId: string
   readonly hashTag: string
   readonly title: string
@@ -49,10 +48,6 @@ export interface EventRequestQuery extends ParsedQs {
 export class EventBodyDTO {
   @IsNotEmpty()
   @IsNumber()
-  readonly userId: number
-
-  @IsNotEmpty()
-  @IsNumber()
   readonly categoryId: number
 
   @IsNotEmpty()
@@ -60,7 +55,7 @@ export class EventBodyDTO {
   readonly subCategoryId: number
 
   @IsArray()
-  @IsNotEmpty()
+  @IsOptional()
   @IsDefined()
   readonly careerCategoryIds!: number[]
 
@@ -104,7 +99,6 @@ export class EventBodyDTO {
   readonly address?: EventAddressDTO
 
   constructor(body: EventRequestBody) {
-    this.userId = Number(body.userId)
     this.categoryId = Number(body.categoryId)
     this.subCategoryId = Number(body.subCategoryId)
     this.title = body.title

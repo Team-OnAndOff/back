@@ -47,8 +47,14 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(morgan.successHandler)
 app.use(morgan.errorHandler)
 
+const corsOption = {
+  origin: [process.env.APP_CLIENT_HOST!],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+}
+
 app.use(express.json())
-app.use(cors())
+app.use(cors(corsOption))
 app.use(cookieParser())
 
 const checkPeriod = 24 * 60 * 60 * 1000
@@ -85,7 +91,13 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(error.errorConverter)
 app.use(error.errorHandler)
 
-const io = new Server(httpServer, {})
+const io = new Server(httpServer, {
+  cors: {
+    origin: [process.env.APP_CLIENT_HOST!],
+    credentials: true,
+    methods: ['GET', 'POST'],
+  },
+})
 
 io.engine.use(sessionMiddleWare)
 

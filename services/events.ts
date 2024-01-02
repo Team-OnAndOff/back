@@ -25,6 +25,8 @@ import {
   EVENT_SORT,
 } from '../types'
 
+import ChatService from './chat'
+
 class EventService {
   private readonly eventRepo
   private readonly eventLikeRepo
@@ -40,10 +42,10 @@ class EventService {
     return this.eventRepo
       .createQueryBuilder('event')
       .innerJoinAndSelect('event.user', 'user')
-      .leftJoinAndSelect('user.image', 'userImage')
+      .innerJoinAndSelect('user.image', 'userImage')
       .innerJoinAndSelect('event.category', 'subCategory')
       .innerJoinAndSelect('subCategory.parentId', 'category')
-      .leftJoinAndSelect('event.image', 'image')
+      .innerJoinAndSelect('event.image', 'image')
       .leftJoinAndSelect('event.address', 'address')
       .leftJoinAndSelect('event.hashTags', 'hashtag')
       .leftJoinAndSelect('event.likes', 'likes')
@@ -76,6 +78,31 @@ class EventService {
       perPage,
     } = query
     const queryBuilder = this.getQueryBuilder()
+
+    if (search) {
+      queryBuilder.innerJoin(
+        (qb) =>
+          qb
+            .select()
+            .from(Event, 'events')
+            .leftJoin(EventHashTag, 'tag', 'tag.eventId = events.id')
+            .addSelect('events.id, tag.hashtag, events.title')
+            .where('tag.hashtag LIKE :search OR events.title LIKE :search', {
+              search: `%${search}%`,
+            }),
+        'tag',
+        'tag.id = event.id',
+      )
+    }
+    queryBuilder
+      .leftJoinAndSelect(
+        'event.eventApplies',
+        'eventApplies',
+        'eventApplies.status = :status AND eventApplies.approvedAt IS NOT NULL AND eventApplies.deletedAt IS NULL',
+        { status: EVENT_APPLY_STATUS.APPROVED },
+      )
+      .leftJoinAndSelect('eventApplies.user', 'appliedUser')
+
     queryBuilder.where('1=1')
     if (categoryId) {
       queryBuilder.andWhere('category.id = :categoryId', { categoryId })
@@ -105,13 +132,6 @@ class EventService {
     }
 
     const events = await queryBuilder.getMany()
-    if (search) {
-      return events.filter(
-        (event) =>
-          event.hashTags.find((hashTag) => hashTag.hashtag === search) ||
-          event.title.includes(search),
-      )
-    }
 
     return events
   }
@@ -136,9 +156,9 @@ class EventService {
     return event
   }
 
-  async createEvent(body: EventBodyDTO, file: ImageDTO) {
+  async createEvent(body: EventBodyDTO, file: ImageDTO, userId: number) {
     const currentDate = new Date()
-    const user = await UserService.findOneById(body.userId)
+    const user = await UserService.findOneById(userId)
     const category = await CategoryService.getSubCategoryById(
       body.categoryId,
       body.subCategoryId,
@@ -217,6 +237,20 @@ class EventService {
       event.eventApplies = applies
 
       const response = await AppDataSource.manager.save(event)
+
+      // 채팅방 등록
+      const chatUser = await ChatService.createChatUser(user)
+      const room = await ChatService.createChatRoom(
+        response,
+        body.categoryId,
+        chatUser,
+      )
+      await ChatService.createChatMessage(
+        'system',
+        `${user.username}님이 입장하였습니다.`,
+        chatUser._id.toString(),
+        room._id.toString(),
+      )
       return response
     } catch (err) {
       await s3Delete(upload.filename)
@@ -224,14 +258,132 @@ class EventService {
     }
   }
 
-  async updateEventById(eventId: number, body: EventBodyDTO) {
-    const response = await this.eventRepo.update({ id: eventId }, body)
+  async updateEventById(
+    eventId: number,
+    body: EventBodyDTO,
+    userId: number,
+    file?: ImageDTO,
+  ) {
+    const existingEvent = await this.getEventById(eventId)
+    if (existingEvent.user.id !== userId) {
+      throw new ApiError(
+        httpStatus.INTERNAL_SERVER_ERROR,
+        '내가 작성한 글이 아닙니다.',
+      )
+    }
+    if (existingEvent) {
+      const category = await CategoryService.getSubCategoryById(
+        body.categoryId,
+        body.subCategoryId,
+      )
+      const prevImagePath = existingEvent.image.uploadPath
+      const response = await AppDataSource.manager.transaction(
+        async (transactionalEntityManager) => {
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .update(Event)
+            .set({
+              category: category,
+              title: body.title,
+              content: body.content,
+              recruitment: body.recruitment,
+              question: body.question,
+              online: body.online,
+              challengeStartDate: body.challengeStartDate,
+              challengeEndDate: body.challengeEndDate,
+            })
+            .where('id = :eventId', { eventId })
+            .execute()
 
-    if (response.affected === 0) {
-      throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
+          if (body.address) {
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .update(EventAddress)
+              .set({
+                zipCode: body.address.zipCode,
+                detail1: body.address.detail1,
+                detail2: body.address.detail2,
+                latitude: body.address.latitude,
+                longitude: body.address.longitude,
+              })
+              .where('id = :id', { id: existingEvent.address.id })
+              .execute()
+          }
+
+          if (body.hashTag) {
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .delete()
+              .from(EventHashTag)
+              .where('eventId = :eventId', { eventId })
+              .execute()
+
+            const updatedHashTags: EventHashTag[] = []
+            for (let i = 0; i < body.hashTag.length; i++) {
+              const tag = new EventHashTag()
+              tag.hashtag = body.hashTag[i]
+              tag.eventId = existingEvent
+              updatedHashTags.push(tag)
+            }
+
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .insert()
+              .into(EventHashTag)
+              .values(updatedHashTags)
+              .execute()
+          }
+
+          if (file) {
+            const upload = await s3Upload(file, 'events')
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .update(Image)
+              .set({
+                filename: upload.filename,
+                size: upload.size,
+                uploadPath: upload.destination,
+              })
+              .where('id = :id', { id: existingEvent.image.id })
+              .execute()
+          }
+
+          const careerCategoriesToRemove =
+            existingEvent.careerCategories.filter(
+              (category) => !body.careerCategoryIds?.includes(category.id),
+            )
+          await transactionalEntityManager
+            .createQueryBuilder()
+            .relation(Event, 'careerCategories')
+            .of(existingEvent)
+            .remove(careerCategoriesToRemove)
+
+          if (body.careerCategoryIds) {
+            const careerCategoriesToAdd = body.careerCategoryIds.filter(
+              (id) =>
+                !existingEvent.careerCategories.some(
+                  (category) => category.id === id,
+                ),
+            )
+
+            await transactionalEntityManager
+              .createQueryBuilder()
+              .relation(Event, 'careerCategories')
+              .of(existingEvent)
+              .add(careerCategoriesToAdd)
+          }
+        },
+      )
+      if (file) {
+        await s3Delete(prevImagePath)
+      }
+      // 채팅방 수정
+      const eve = await this.getEventById(eventId)
+      await ChatService.updateChatRoom(eve, body.categoryId)
+      return response
     }
 
-    return await this.getEventById(eventId)
+    throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
   }
 
   async deleteEventById(eventId: number) {
@@ -275,6 +427,9 @@ class EventService {
     if (response.affected === 0) {
       throw new ApiError(httpStatus.NOT_FOUND, '모임 정보를 찾을 수 없습니다.')
     }
+
+    // 채팅방 삭제
+    await ChatService.deleteChatRoom(eventId)
 
     return response
   }
@@ -428,7 +583,7 @@ class EventService {
         return await transactionalEntityManager
           .createQueryBuilder()
           .update(EventApply)
-          .set(filteredData)
+          .set({ ...filteredData, approvedAt: new Date() })
           .where('id = :id', { id: applyId })
           .andWhere('eventId = :eventId', { eventId })
           .andWhere('userId = :userId', { userId })
@@ -441,6 +596,42 @@ class EventService {
         httpStatus.INTERNAL_SERVER_ERROR,
         '수정할 데이터가 존재하지 않습니다.',
       )
+    }
+
+    // 채팅방에 추가
+    if (dto.status === EVENT_APPLY_STATUS.APPROVED) {
+      const user = await UserService.findOneById(userId)
+      if (user) {
+        const chatUser = await ChatService.createChatUser(user)
+        const room = await ChatService.getChatRoomByRoomId(eventId)
+        if (room) {
+          await ChatService.joinRoomUser(eventId, chatUser)
+          await ChatService.createChatMessage(
+            'system',
+            `${user.username}님이 입장하였습니다.`,
+            chatUser._id.toString(),
+            room._id.toString(),
+          )
+        }
+      }
+    }
+
+    // 채팅방에서 삭제
+    if (dto.status === EVENT_APPLY_STATUS.LEAVE) {
+      const user = await UserService.findOneById(userId)
+      if (user) {
+        const chatUser = await ChatService.createChatUser(user)
+        const room = await ChatService.getChatRoomByRoomId(eventId)
+        if (room) {
+          await ChatService.leaveChatRoom(eventId, chatUser)
+          await ChatService.createChatMessage(
+            'system',
+            `${user.username}님이 퇴장하였습니다.`,
+            chatUser._id.toString(),
+            room._id.toString(),
+          )
+        }
+      }
     }
     return response
   }

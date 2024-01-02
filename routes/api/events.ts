@@ -30,12 +30,14 @@ router.post(
   EventController.createEvent,
 )
 
-// router.put(
-//   '/:id',
-//   validate(ParamsDTO, 'params'),
-//   validate(EventBodyDTO),
-//   EventController.updateEvent,
-// )
+router.put(
+  '/:id',
+  isLogin,
+  upload.single('image'),
+  validate(BodyDTO),
+  validate(ParamsDTO, 'params'),
+  EventController.updateEvent,
+)
 
 router.delete(
   '/:id',

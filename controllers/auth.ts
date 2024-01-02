@@ -5,15 +5,15 @@ import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 export default class AuthController {
   static getLoginCallback = catchAsync(async (req, res, next) => {
     if (req.isAuthenticated()) {
-      if (req.session.originUrl) {
-        console.log(req.sessionID, req.session)
-        res.redirect(req.session.originUrl)
+      if (res.locals.originUrl) {
+        console.log(res.locals.originUrl)
+        return res.redirect(res.locals.originUrl)
       }
-      res
+      return res
         .status(httpStatus.OK)
         .json(new ResponseDTO(httpStatus.OK, '로그인 성공'))
     } else {
-      res
+      return res
         .status(httpStatus.UNAUTHORIZED)
         .json(new ResponseDTO(httpStatus.UNAUTHORIZED, '로그인 필요합니다.'))
     }

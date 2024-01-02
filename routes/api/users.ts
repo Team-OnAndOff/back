@@ -30,6 +30,16 @@ const userIdValidator = {
     .strict(),
 }
 
+
+const assessListInEventValidator = {
+  params: z
+    .object({
+      user_id: z.string(),
+      event_id: z.string().optional(),
+    })
+    .strict(),
+}
+
 const MAX_FILE_SIZE = 500000
 const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png']
 const updateUserValidator = {
@@ -41,6 +51,7 @@ const updateUserValidator = {
   body: z
     .object({
       username: z.string().optional(),
+      hashtag: z.string().max(40).optional(),
       email: z.string().email('이메일 형식이 잘못되었습니다.').optional(),
       introduction: z.string().optional(),
       image: z
@@ -68,7 +79,7 @@ const postAssessValidator = {
     .object({
       eventId: z.number(),
       attendeeId: z.number(),
-      score: z.number().min(0).max(5),
+      score: z.number().min(-5).max(5),
       description: z.string().optional(),
     })
     .strict(),
@@ -77,7 +88,7 @@ const updateAssessValidator = {
   params: z.object({ assess_id: z.string() }).strict(),
   body: z
     .object({
-      score: z.number().min(0).max(5),
+      score: z.number().min(-5).max(5),
       description: z.string().optional(),
     })
     .strict(),
@@ -87,8 +98,13 @@ const deleteAssessValidator = {
 }
 
 router.get(
+  '/:user_id/assess/:event_id',
+  validateRequest(assessListInEventValidator),
+  UserController.getAssessingList,
+)
+router.get(
   '/:user_id/assess',
-  validateRequest(userIdValidator),
+  validateRequest(assessListInEventValidator),
   UserController.getAssessingList,
 )
 router.get(
@@ -98,11 +114,23 @@ router.get(
   UserController.getAssessedList,
 )
 router.get(
+  '/:user_id/related-events',
+  validateRequest(userIdValidator),
+  UserController.getUserRelatedEvents,
+)
+router.get(
+  '/:user_id/badges',
+  validateRequest(userIdValidator),
+  UserController.getUserBadges,
+)
+
+router.get(
   '/:user_id/events',
   isLogin,
   validateRequest(userIdValidator),
   UserController.getUserAppliedEvents,
 )
+
 router.get(
   '/:user_id/info',
   validateRequest(getUserInfoValidator),

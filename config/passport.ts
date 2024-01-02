@@ -14,6 +14,7 @@ import UserService from '../services/users'
 import { User } from '../models/typeorm/entity/User'
 import { CreateUserDTO } from '../models/typeorm/dto/UserDTO'
 import { OAuthEnum } from '../routes/api/auth'
+import { Image } from '../models/typeorm/entity/Image'
 
 dotenv.config()
 interface URequst extends Request {
@@ -32,23 +33,31 @@ export const isLogin = (req: any, res: any, next: any): void => {
   next()
 }
 
-const bringUser = async (profile: Profile, oauthType: OAuthEnum) => {
+const bringUser = async (
+  userName: string,
+  socialId: string,
+  oauthType: OAuthEnum,
+  photo?: string,
+) => {
   logger.info(`${oauthType} : 로그인 시도!`)
-  let user = await UserService.findOneBySocialId(profile.id)
-  if (!user) {
-    let username = ''
-    if (OAuthEnum.GOOGLE) {
-      username = profile.displayName
-    } else if (OAuthEnum.KAKAO) {
-      username = profile.username ? profile.username : ''
-    } else if (OAuthEnum.GITHUB) {
-      username = profile.username ? profile.username : ''
-    }
-    user = await UserService.createUser(
-      new CreateUserDTO(username, profile.id, oauthType),
-    )
+  let user = await UserService.findOneBySocialId(socialId)
+  let image: Image | undefined = undefined
+  if (photo) {
+    image = new Image()
+    image.uploadPath = photo
+    image.filename = 'default'
+    image.size = 100
   }
-  logger.info(`-=-> ${user}`)
+  console.log(image)
+  if (!user) {
+    user = await UserService.createUser(
+      new CreateUserDTO(userName, socialId, oauthType),
+    )
+    if (image) {
+      const userId = user.id
+      await UserService.updateUserForImage(userId, image)
+    }
+  }
   return user
 }
 
@@ -67,9 +76,13 @@ export const setOauthStrategies = (_app: Express) => {
         let isNewUser = false
         const originUrl = req.session.originUrl
         const profileUrl = req.session.profileUrl
+        const userName = profile.displayName
+        const socialId = profile.id
+        const photo = profile._json.properties.profile_image
+        console.log(userName, socialId, photo)
         if (!user) {
           isNewUser = true
-          user = await bringUser(profile, OAuthEnum.KAKAO)
+          user = await bringUser(userName, socialId, OAuthEnum.KAKAO, photo)
         }
 
         await req.session.save(async (err) => {
@@ -95,9 +108,13 @@ export const setOauthStrategies = (_app: Express) => {
         let isNewUser = false
         const originUrl = req.session.originUrl
         const profileUrl = req.session.profileUrl
+        const userName = profile.displayName
+        const socialId = profile.id
+        const photo = profile._json.picture
+        console.log(userName, socialId, photo)
         if (!user) {
           isNewUser = true
-          user = await bringUser(profile, OAuthEnum.GOOGLE)
+          user = await bringUser(userName, socialId, OAuthEnum.GOOGLE, photo)
         }
 
         await req.session.save(async (err) => {
@@ -105,7 +122,7 @@ export const setOauthStrategies = (_app: Express) => {
           req.session.originUrl = originUrl
           req.session.profileUrl = profileUrl
         })
-        done(null, user, { hello: 'world' })
+        done(null, user)
       },
     ),
   )
@@ -124,8 +141,9 @@ export const setOauthStrategies = (_app: Express) => {
         profile: Profile,
         cb: any,
       ) {
-        const user = await bringUser(profile, OAuthEnum.GITHUB)
-        cb(null, user)
+        console.log(profile)
+        // const user = await bringUser(profile, OAuthEnum.GITHUB)
+        // cb(null, user)
       },
     ),
   )
