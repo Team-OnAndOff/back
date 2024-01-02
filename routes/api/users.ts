@@ -30,6 +30,7 @@ const userIdValidator = {
     .strict(),
 }
 
+
 const assessListInEventValidator = {
   params: z
     .object({
@@ -106,7 +107,6 @@ router.get(
   validateRequest(assessListInEventValidator),
   UserController.getAssessingList,
 )
-
 router.get(
   '/:user_id/my-assess',
   isLogin,

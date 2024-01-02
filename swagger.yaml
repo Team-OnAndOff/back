@@ -4,7 +4,7 @@ info:
   description: API 문서
   version: 1.0.0
 servers:
-  # - url: http://kdt-sw-7-team05.elicecoding.com:5001/api
+  - url: http://kdt-sw-7-team05.elicecoding.com:5001/api
   - url: http://localhost:4000/api
 tags:
   - name: auth
@@ -412,6 +412,7 @@ paths:
             schema:
               type: object
               required:
+                - userId
                 - image
                 - categoryId
                 - subCategoryId
@@ -423,6 +424,10 @@ paths:
                 - question
                 - challengeStartDate
               properties:
+                userId:
+                  type: number
+                  example: 1
+                  description: 유저ID
                 categoryId:
                   type: number
                   example: 1

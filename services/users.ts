@@ -42,6 +42,7 @@ class UserService {
   private categoryRepy
   private subCategoryRepo
   private imageRepo
+
   constructor() {
     this.repo = AppDataSource.getRepository(User)
     this.assessRepo = AppDataSource.getRepository(UserAssess)
@@ -88,7 +89,6 @@ class UserService {
     console.log(result)
     return result
   }
-
   async updateUser(dto: UpdateUserDTO) {
     let upload: ImageDTO
     return await AppDataSource.transaction(async (manager) => {
@@ -187,6 +187,7 @@ class UserService {
     if (!reporter) {
       throw new ApiError(httpStatus.NOT_FOUND, '리포터 정보가 잘못되었습니다.')
     }
+
     const previous = await this.assessRepo
       .createQueryBuilder('ua')
       .andWhere('ua.reporterId = :reporterId', { reporterId: dto.reporterId })
@@ -305,6 +306,7 @@ class UserService {
 
     return result
   }
+
   async getUserAppliedEvents(userId: number, status: EVENT_APPLY_STATUS) {
     const result = await this.eventApplyRepo
       .createQueryBuilder('ea')

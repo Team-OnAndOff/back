@@ -14,6 +14,7 @@ import { User } from '../models/typeorm/entity/User'
 import { ResponseDTO } from '../models/typeorm/dto/ResponseDTO'
 import { ImageDTO } from '../models/typeorm/dto/ImageDTO'
 import { EVENT_APPLY_STATUS } from '../types'
+
 // import { IUserRequest } from '../config/passport'
 
 interface UserRequest extends Request {
@@ -30,6 +31,7 @@ export default class UserController {
         '해당 아이디를 가진 유저가 존재하지 않습니다.',
       )
     }
+
     let me = false
     if (req.user) {
       const reqUser: any = req.user
@@ -37,6 +39,7 @@ export default class UserController {
         me = true
       }
     }
+
     res.status(httpStatus.OK).json(
       new ResponseDTO(httpStatus.OK, '', {
         user_id: user.id,
@@ -122,6 +125,7 @@ export default class UserController {
         .json(new ResponseDTO(httpStatus.OK, '등록된 모임목록', result))
     },
   )
+
   static getUserRelatedEvents = catchAsync(
     async (req: Request & { user?: any }, res, next) => {
       const userId = Number(req.params.user_id)

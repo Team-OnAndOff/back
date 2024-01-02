@@ -76,7 +76,6 @@ export const setOauthStrategies = (_app: Express) => {
         let isNewUser = false
         const originUrl = req.session.originUrl
         const profileUrl = req.session.profileUrl
-
         const userName = profile.displayName
         const socialId = profile.id
         const photo = profile._json.properties.profile_image
@@ -109,7 +108,6 @@ export const setOauthStrategies = (_app: Express) => {
         let isNewUser = false
         const originUrl = req.session.originUrl
         const profileUrl = req.session.profileUrl
-
         const userName = profile.displayName
         const socialId = profile.id
         const photo = profile._json.picture

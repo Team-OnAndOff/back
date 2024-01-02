@@ -24,7 +24,9 @@ import {
   EVENT_ORDER,
   EVENT_SORT,
 } from '../types'
+
 import ChatService from './chat'
+
 class EventService {
   private readonly eventRepo
   private readonly eventLikeRepo
@@ -76,6 +78,7 @@ class EventService {
       perPage,
     } = query
     const queryBuilder = this.getQueryBuilder()
+
     if (search) {
       queryBuilder.innerJoin(
         (qb) =>
@@ -248,7 +251,6 @@ class EventService {
         chatUser._id.toString(),
         room._id.toString(),
       )
-
       return response
     } catch (err) {
       await s3Delete(upload.filename)
@@ -631,7 +633,6 @@ class EventService {
         }
       }
     }
-
     return response
   }
 
